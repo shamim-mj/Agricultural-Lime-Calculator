@@ -14,7 +14,7 @@ st.markdown("""
     <style>
     #MainMenu, footer {}
     .main-header {
-        background-color: #0033A0; color: white; text-align: center; 
+        background-color: #0033A0; color: white !important; text-align: center; 
         padding: 10px; border-radius: 5px; margin-bottom: 20px;
     }
     </style>
