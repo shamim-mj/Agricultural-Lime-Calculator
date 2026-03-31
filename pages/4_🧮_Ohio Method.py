@@ -166,12 +166,17 @@ with st.status("Analyzing Soil Data...", expanded=True) as status:
 
 tab1, tab2, tab3 = st.tabs(["**Lime Quality**", "**Amount & Cost**", "**Summary Results**"])
 
+base_height = 1.5  # Minimum height for the "cute" look
+height_per_quarry = 0.5
+dynamic_height = base_height + (len(df_oh) * height_per_quarry)
+
+
 with tab1:
     #st.markdown("<h4 style='text-align: center;'>Fineness & ENP</h4>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### Lime Fineness")
         # Fineness Stack
-        fig, axes = plt.subplots(4, 1, figsize=(8, 6 + len(df_oh)*0.4), sharex=True)
+        fig, axes = plt.subplots(4, 1, figsize=(8, dynamic_height * 1.2), sharex=True)
         metrics = [("Zero%_eff", "#8 Sieve"), ("twenty%_eff", "#20 Sieve"), 
                 ("fifty%_eff", "#60 Sieve"), ("Hund%_eff", "< #60 Sieve")]
         
@@ -188,7 +193,7 @@ with tab1:
     with st.container(border=True):
         st.markdown("### Effective Neutralizing Power (ENP, %)")
     # ENP Plot
-        fig2, ax5 = plt.subplots(figsize=(8, 2 + len(df_oh)*0.5))
+        fig2, ax5 = plt.subplots(figsize=(8, dynamic_height * 1.2))
         sns.barplot(data=df_oh, x='%_ENP', y='Quarry', ax=ax5, palette=pallete)
         #ax5.set_title("Effective Neutralizing Power (ENP %)")
         ax5.set_ylabel("")
@@ -204,7 +209,7 @@ with tab2:
     with st.container(border=True):
         st.markdown("### Adjusted Lime Recommendation (t/ac)")
     # Rec Plot
-        fig3, ax6 = plt.subplots(figsize=(8, 2 + len(df_oh)*0.5))
+        fig3, ax6 = plt.subplots(figsize=(8, dynamic_height * 1.2))
         sns.barplot(data=df_oh, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete)
         #ax6.set_title("Adjusted Lime Recommendation (t/ac)")
         ax6.set_xlim(0, df_oh['Bulk_Rec'].max() * 1.3 if not df_oh.empty else 10)
@@ -218,7 +223,7 @@ with tab2:
     # Cost Plot
     with st.container(border=True):
         st.markdown("### Total application cost ($/ac)")
-        fig4, ax7 = plt.subplots(figsize=(8, 2 + len(df_oh)*0.5))
+        fig4, ax7 = plt.subplots(figsize=(8, dynamic_height * 1.2))
         sns.barplot(data=df_oh, x='Cost', y='Quarry', ax=ax7, palette=pallete)
         #ax7.set_title("Total application cost ($/ac)")
         ax7.set_xlim(0, df_oh['Cost'].max() * 1.3 if not df_oh.empty else 10)

@@ -151,66 +151,72 @@ with st.status("Analyzing Soil Data...", expanded=True) as status:
 
 
 tab1, tab2, tab3 = st.tabs(["**Lime Quality**", "**Amount & Cost**", "**Note**"])
+
+base_height = 1.5  # Minimum height for the "cute" look
+height_per_quarry = 0.5
+dynamic_height = base_height + (len(df_IL) * height_per_quarry)
+
 with tab1:
-    #st.markdown("<h4 style='text-align: center;'>Illinois Particle Efficiency</h4>", unsafe_allow_html=True)
-    # Sieve Stack
+    # Sieve Stack (4 plots for Illinois)
     with st.container(border=True):
         st.markdown("### Particle Efficiency")
-        fig, axes = plt.subplots(4, 1, figsize=(8, 7), sharex=True)
+        # Multiplied by 1.5 because there are 4 subplots here
+        fig, axes = plt.subplots(4, 1, figsize=(8, dynamic_height * 1.5), sharex=True)
         metrics = [("L8B0", "#8 Sieve (5%)"), ("L30B8", "#30 Sieve (20%)"), 
-                ("L60B30", "#60 Sieve (50%)"), ("L60", "<#60 Sieve (100%)")]
+                   ("L60B30", "#60 Sieve (50%)"), ("L60", "<#60 Sieve (100%)")]
         
         for i, (col, title) in enumerate(metrics):
-            sns.barplot(data=df_IL, x=col, y='Quarry', ax=axes[i], palette=pallete)
+            sns.barplot(data=df_IL, x=col, y='Quarry', ax=axes[i], palette=pallete, width=0.4)
             axes[i].set_xlim(0, 120)
             axes[i].set_ylabel("")
             axes[i].set_title(title, loc='center', fontsize=10)
+            axes[i].set_xticks([]) # Hide the numbers on the x-axis for a clean look
             add_labels(axes[i])
-        plt.tight_layout(pad=0.1)
+        plt.tight_layout(pad=1.0)
         st.pyplot(fig)
+        plt.close()
+
     with st.container(border=True):
         st.markdown("### Effective Neutralizing Value (ENV, %)")
-        # ENV Plot
-        fig2, ax5 = plt.subplots(figsize=(8, 3))
-        sns.barplot(data=df_IL, x='ENV', y='Quarry', ax=ax5, palette=pallete)
-        #ax5.set_title("Effective Neutralizing Value (ENV, %)")
+        fig2, ax5 = plt.subplots(figsize=(8, dynamic_height * 0.6))
+        sns.barplot(data=df_IL, x='ENV', y='Quarry', ax=ax5, palette=pallete, width=0.4)
         ax5.set_ylabel("")
         ax5.set_xlabel("")
         ax5.set_xlim(0, 120)
         ax5.set_xticks([])
-        ax5.set_xticklabels([])
         add_labels(ax5)
         st.pyplot(fig2)
+        plt.close()
 
 with tab2:
     st.markdown("<h4 style='text-align: center;'>Application Strategy</h4>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### Adjusted Lime Recommendation (t/ac)")
-        # Recommendation
-        fig3, ax6 = plt.subplots(figsize=(8, 3))
-        sns.barplot(data=df_IL, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete)
-        #ax6.set_title("Adjusted Lime Recommendation (t/ac)")
-        ax6.set_xlim(0, df_IL['Bulk_Rec'].max() * 1.3)
+        fig3, ax6 = plt.subplots(figsize=(8, dynamic_height * 0.6))
+        sns.barplot(data=df_IL, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete, width=0.4)
+        
+        # FIXED: Ensure we use ax6 limits and labels
+        ax6.set_xlim(0, (df_IL['Bulk_Rec'].max() * 1.3) if not df_IL.empty else 10)
         ax6.set_xlabel("")
         ax6.set_ylabel("")
-        ax5.set_xticks([])
-        ax5.set_xticklabels([])
+        ax6.set_xticks([]) # FIXED: Was ax5 previously
         add_labels(ax6)
         st.pyplot(fig3)
+        plt.close()
 
-    # Cost
     with st.container(border=True):
         st.markdown("### Total Application Cost ($/ac)")
-        fig4, ax7 = plt.subplots(figsize=(8, 3))
-        sns.barplot(data=df_IL, x='Cost', y='Quarry', ax=ax7, palette=pallete)
-        #ax7.set_title("Total Application Cost ($/ac)")
-        ax7.set_xlim(0, df_IL['Cost'].max() * 1.3)
+        fig4, ax7 = plt.subplots(figsize=(8, dynamic_height * 0.6))
+        sns.barplot(data=df_IL, x='Cost', y='Quarry', ax=ax7, palette=pallete, width=0.4)
+        
+        # FIXED: Ensure we use ax7 limits and labels
+        ax7.set_xlim(0, (df_IL['Cost'].max() * 1.3) if not df_IL.empty else 10)
         ax7.set_xlabel("")
-        ax5.set_xticks([])
-        ax5.set_xticklabels([])
         ax7.set_ylabel("")
+        ax7.set_xticks([]) # FIXED: Was ax5 previously
         add_labels(ax7)
         st.pyplot(fig4)
+        plt.close()
 
 with tab3:
     st.info("Analysis based on the Illinois Voluntary Limestone Program. The 'Adjusted Recommendation' accounts for fineness efficiency and CCE to ensure target pH is met.")

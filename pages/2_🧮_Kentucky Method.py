@@ -199,74 +199,69 @@ with st.status("Analyzing Soil Data...", expanded=True) as status:
 
 tab1, tab2, tab3 = st.tabs(["**Lime Quality**", "**Amount & Cost**", "**Summary Results**"])
 
+# --- 1. SET A BASE HEIGHT LOGIC ---
+# This ensures 1 sample doesn't look "chunky" and 20 samples don't look "cramped"
+base_height = 1.5  # Minimum height for the "cute" look
+height_per_quarry = 0.5
+dynamic_height = base_height + (len(df) * height_per_quarry)
+
 with tab1:
-   # st.markdown("<h4 style='text-align: center;'>Particle Size & RNV</h4>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### Particle Size")
-        # 1. Fineness Triple Plot
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 5 + len(df)*0.2), sharex=True)
+        # Adjust figsize to be dynamic based on row count
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, dynamic_height * 1.2), sharex=True)
         metrics = [("Zero%_eff", ax1, "#10 Sieve"), ("Fifty%_eff", ax2, "#50 Sieve"), ("Hund%_eff", ax3, "<#50 Sieve")]
         
         for col, ax, label in metrics:
-            sns.barplot(data=df, x=col, y='Quarry', ax=ax, palette=pallete)
-            ax.set_xlim(0, 120) # Plenty of room for text
+            # Set 'width' to 0.4 or 0.5 to keep bars slim even if there is only 1 row
+            sns.barplot(data=df, x=col, y='Quarry', ax=ax, palette=pallete, width=0.4)
+            ax.set_xlim(0, 120)
             ax.set_ylabel("")
             ax.set_xlabel("")
             ax.set_xticks([])
-            ax.set_xticklabels([])
             ax.set_title(label, loc='center', fontsize=10)
             add_labels(ax)
         
-        plt.tight_layout(pad=0.1)
+        plt.tight_layout(pad=1.0)
         st.pyplot(fig)
         plt.close()
-    
+
     with st.container(border=True):
         st.markdown("### Relative Neutralizing Value (RNV, %)")
-        # 2. RNV Plot
-        fig2, ax4 = plt.subplots(figsize=(8, 2 + len(df)*0.2))
-        sns.barplot(data=df, x='RNV', y='Quarry', ax=ax4, palette=pallete)
-       # ax4.set_title("Relative Neutralizing Value (RNV %)", pad=15)
+        # Apply the same dynamic height and width here
+        fig2, ax4 = plt.subplots(figsize=(8, dynamic_height * 0.5))
+        sns.barplot(data=df, x='RNV', y='Quarry', ax=ax4, palette=pallete, width=0.4)
         ax4.set_xlim(0, 120)
         ax4.set_ylabel("")
         ax4.set_xticks([])
-        ax4.set_xticklabels([])
         ax4.set_xlabel("")
         add_labels(ax4)
         st.pyplot(fig2)
         plt.close()
 
 with tab2:
-    st.markdown("<h4 style='text-align: center;'>Recommendations</h4>", unsafe_allow_html=True)
+    # --- Apply the same pattern to Recommendation and Cost plots ---
     with st.container(border=True):
         st.markdown("### Lime Amount")
-        # Rec Plot
-        fig3, ax5 = plt.subplots(figsize=(8, 2 + len(df)*0.2))
-        sns.barplot(data=df, x='Bulk_Rec', y='Quarry', ax=ax5, palette=pallete)
-        ax5.set_title(f"Adjusted lime amount (t/ac) required to raise \nsoil pH of {wph} to a target pH of {tph}", pad=15)
+        fig3, ax5 = plt.subplots(figsize=(8, dynamic_height * 0.5))
+        sns.barplot(data=df, x='Bulk_Rec', y='Quarry', ax=ax5, palette=pallete, width=0.4)
         ax5.set_xlim(0, (df['Bulk_Rec'].max() * 1.3) if not df.empty else 10)
         ax5.set_ylabel("")
         ax5.set_xticks([])
-        ax5.set_xticklabels([])
-        ax5.set_xlabel("")
         add_labels(ax5)
         st.pyplot(fig3)
         plt.close()
+
     with st.container(border=True):
-        st.markdown("### Total Lime and Application Cost (t/ac)")
-    # Cost Plot
-        fig4, ax6 = plt.subplots(figsize=(8, 2 + len(df)*0.2))
-        sns.barplot(data=df, x='Cost', y='Quarry', ax=ax6, palette=pallete)
-        #ax6.set_title("Total lime and applicaiton cost ($/ac)", pad=15)
+        st.markdown("### Total Cost ($/ac)")
+        fig4, ax6 = plt.subplots(figsize=(8, dynamic_height * 0.5))
+        sns.barplot(data=df, x='Cost', y='Quarry', ax=ax6, palette=pallete, width=0.4)
         ax6.set_xlim(0, (df['Cost'].max() * 1.3) if not df.empty else 10)
         ax6.set_ylabel("")
         ax6.set_xticks([])
-        ax6.set_xticklabels([])
-        ax6.set_xlabel("")
         add_labels(ax6)
         st.pyplot(fig4)
         plt.close()
-
 
     #-----------------------------------------------------------------------------------
 with tab3:
