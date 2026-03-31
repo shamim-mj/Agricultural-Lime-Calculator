@@ -1,0 +1,11 @@
+# Python junk
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+
+# Streamlit junk
+.streamlit/
