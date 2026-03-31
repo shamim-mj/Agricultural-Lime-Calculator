@@ -160,9 +160,8 @@ else:
     # Use this when a calculation or upload starts
 with st.status("Analyzing Soil Data...", expanded=True) as status:
     st.write("Applying Ohio method...")
-    time.sleep(1) # Simulating math
+    time.sleep(0.5) # Simulating math
     st.write("Effective Neutralizing Power (ENP, %)...")
-    time.sleep(1)
     status.update(label="Analysis Complete!", state="complete", expanded=False)
 
 tab1, tab2, tab3 = st.tabs(["**Lime Quality**", "**Amount & Cost**", "**Summary Results**"])

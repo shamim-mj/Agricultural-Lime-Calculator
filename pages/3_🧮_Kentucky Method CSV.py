@@ -29,9 +29,8 @@ percent_weight = option_menu(None, ["Lab Results (Weight)", "Lab Results (Percen
 # Use this when a calculation or upload starts
 with st.status("Analyzing Soil Data...", expanded=True) as status:
     st.write("Applying Sikora-2 Buffer Method...")
-    time.sleep(1) # Simulating math
+    time.sleep(0.5) # Simulating math
     st.write("Calculating Relative Neutralizing Value (RNV)...")
-    time.sleep(1)
     status.update(label="Analysis Complete!", state="complete", expanded=False)
 
 

@@ -144,9 +144,8 @@ else:
 # Use this when a calculation or upload starts
 with st.status("Analyzing Soil Data...", expanded=True) as status:
     st.write("Applying Illinois method...")
-    time.sleep(1) # Simulating math
+    time.sleep(0.5) # Simulating math
     st.write("Effective Neutralizing Value (ENV, %)...")
-    time.sleep(1)
     status.update(label="Analysis Complete!", state="complete", expanded=False)
 
 
