@@ -16,7 +16,7 @@ st.markdown("""
     footer {visibility: hidden;}
     .main-header {
         background-color: #0033A0; 
-        color: white; 
+        color: white !important;
         text-align: center; 
         padding: 10px; 
         border-radius: 5px;
