@@ -5,6 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 from st_aggrid import AgGrid
+import time
 st.markdown(""" <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -23,6 +24,17 @@ percent_weight = option_menu(None, ["Lab Results (Weight)", "Lab Results (Percen
         "nav-link-selected": {"background-color": "#ff0000"},
     }
 )
+
+
+# Use this when a calculation or upload starts
+with st.status("Analyzing Soil Data...", expanded=True) as status:
+    st.write("Applying Sikora-2 Buffer Method...")
+    time.sleep(1) # Simulating math
+    st.write("Calculating Relative Neutralizing Value (RNV)...")
+    time.sleep(1)
+    status.update(label="Analysis Complete!", state="complete", expanded=False)
+
+
 # ask the user what kind of data s/he has
 if percent_weight=="Lab Results (Weight)":
     st.write("**:blue[Your file should look like this. The number of rows depends on the number of your samples]**")
@@ -35,7 +47,7 @@ if percent_weight=="Lab Results (Weight)":
     <div style="text-align: justify;">
     <span style='color: #0033A0; font-weight: bold; '>Tips:</span>
     Your file must be a CSV file and should have columns as shown above. If the number and order of the columns are incorrect, 
-    the calculator will through an error. </br>Please keep in mind that soil water pH (wph), buffer pH (bph), and 
+    the calculator will throw an error. </br>Please keep in mind that soil water pH (wph), buffer pH (bph), and 
     target pH (tph) must be the same for all samples. Here we assume various lime sources are calculated for the same soil.
     </div>
     """, unsafe_allow_html=True)
@@ -233,13 +245,13 @@ try:
         st.markdown("<h3 style='text-align: center; color: blue;'>""</h3>", unsafe_allow_html=True)
         fig2, ax5 = plt.subplots(figsize =(7,others) )
         ax5.set_ylabel(None)
-        ax5.set_title(f"Adjusted Lime Recommendation ($Tons\ Acre^{-1}$)\nto raise soil water pH of {round(SWPH[0], 1)} to a target pH of {round(TPH[0],1)}", fontsize = 14)
+        ax5.set_title(f"Adjusted lime amount required to raise soil pH of {round(SWPH[0], 1)} to a target pH of {round(TPH[0],1)}", fontsize = 14)
 
         FiPlot = sns.barplot(x='Bulk_Rec', y = 'Quarry', data=df, ax=ax5, palette=pallete)
         ax5.bar_label(FiPlot.containers[0], fmt="%.2f", rotation = rotation, label_type=data_labels)
         ax5.set_ylabel(None)
         ax5.set_xlim([0, max(df.Bulk_Rec)+max(df.Bulk_Rec)*0.1]) # This syntax max the x axis length dynamic. Without it the data lable makes a problem
-        ax5.set_xlabel("", fontsize = 14)
+        ax5.set_xlabel("Lime amount (t/ac)", fontsize = 14)
         ax5.axes.xaxis.set_visible(False)
         ax5.set_xticklabels([])
             
@@ -247,12 +259,12 @@ try:
 
         fig3, ax6 = plt.subplots(figsize =(7,others) )
         ax6.set_ylabel(None)
-        ax6.set_title(f"Total Cost of Lime Application ($\$\ Acre^{-1}$)\nto raise soil water pH of {round(SWPH[0], 1)} to a target pH of {round(TPH[0],1)}", fontsize = 14)
+        ax6.set_title(f"Total applicaiotn costs to raise soil water pH of {round(SWPH[0], 1)} to a target pH of {round(TPH[0],1)}", fontsize = 14)
 
         SiPlot = sns.barplot(x='Cost', y = 'Quarry', data=df, ax=ax6, palette=pallete)
         ax6.bar_label(SiPlot.containers[0], fmt="%.2f", rotation = rotation, label_type=data_labels)
         ax6.set_ylabel(None)
-        ax6.set_xlabel(None)
+        ax6.set_xlabel("Total applicaiton costs ($/ac)")
         ax6.set_xlim([0, max(df.Cost)+max(df.Cost)*0.1])
         ax6.axes.xaxis.set_visible(False)
         ax6.set_xticklabels([])
