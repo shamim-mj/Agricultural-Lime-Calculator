@@ -53,6 +53,19 @@ st.markdown("""
         color: #0033A0;
         font-size: 1.8rem !important;
     }
+            
+              /* Add a soft glow when hovering over a result card */
+    div[data-testid="stVerticalBlock"] > div:has(div.stExpander), 
+    .st-emotion-cache-12w0slk { /* Targets container-bordered divs */
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    div[data-testid="element-container"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,51,160,0.1);
+
+            
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -188,50 +201,62 @@ with tab1:
             axes[i].set_xticklabels([])
             axes[i].set_title(title, loc='center', fontsize=10)
             add_labels(axes[i])
-        plt.tight_layout(pad=0.1)
+        plt.tight_layout(pad=0.2)
         st.pyplot(fig)
+
+
+with tab1:
+    # ... Particle Size code here (ensure width=0.4 is there too) ...
+
     with st.container(border=True):
         st.markdown("### Effective Neutralizing Power (ENP, %)")
-    # ENP Plot
-        fig2, ax5 = plt.subplots(figsize=(8, dynamic_height * 1.2))
-        sns.barplot(data=df_oh, x='%_ENP', y='Quarry', ax=ax5, palette=pallete)
-        #ax5.set_title("Effective Neutralizing Power (ENP %)")
+        # Lowered multiplier to 0.6 because single plots don't need as much vertical space as the triple stack
+        fig2, ax5 = plt.subplots(figsize=(8, dynamic_height * 0.6))
+        
+        # ADDED width=0.4 HERE
+        sns.barplot(data=df_oh, x='%_ENP', y='Quarry', ax=ax5, palette=pallete, width=0.4)
+        
         ax5.set_ylabel("")
-        ax5.set_xticks([])
-        ax5.set_xticklabels([])
         ax5.set_xlabel("")
         ax5.set_xlim(0, 120)
+        ax5.set_xticks([])
+        ax5.set_xticklabels([])
         add_labels(ax5)
         st.pyplot(fig2)
+        plt.close()
 
 with tab2:
-    #st.markdown("<h4 style='text-align: center;'>Recommendations (Rounded Up)</h4>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### Adjusted Lime Recommendation (t/ac)")
-    # Rec Plot
-        fig3, ax6 = plt.subplots(figsize=(8, dynamic_height * 1.2))
-        sns.barplot(data=df_oh, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete)
-        #ax6.set_title("Adjusted Lime Recommendation (t/ac)")
-        ax6.set_xlim(0, df_oh['Bulk_Rec'].max() * 1.3 if not df_oh.empty else 10)
+        fig3, ax6 = plt.subplots(figsize=(8, dynamic_height * 0.6))
+        
+        # ADDED width=0.4 HERE
+        sns.barplot(data=df_oh, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete, width=0.4)
+        
+        ax6.set_xlim(0, (df_oh['Bulk_Rec'].max() * 1.3) if not df_oh.empty else 10)
         ax6.set_ylabel("")
-        ax6.set_xticks([])
         ax6.set_xlabel("")
+        ax6.set_xticks([])
         ax6.set_xticklabels([])
         add_labels(ax6)
         st.pyplot(fig3)
+        plt.close()
 
-    # Cost Plot
     with st.container(border=True):
         st.markdown("### Total application cost ($/ac)")
-        fig4, ax7 = plt.subplots(figsize=(8, dynamic_height * 1.2))
-        sns.barplot(data=df_oh, x='Cost', y='Quarry', ax=ax7, palette=pallete)
-        #ax7.set_title("Total application cost ($/ac)")
-        ax7.set_xlim(0, df_oh['Cost'].max() * 1.3 if not df_oh.empty else 10)
+        fig4, ax7 = plt.subplots(figsize=(8, dynamic_height * 0.6))
+        
+        # ADDED width=0.4 HERE
+        sns.barplot(data=df_oh, x='Cost', y='Quarry', ax=ax7, palette=pallete, width=0.4)
+        
+        ax7.set_xlim(0, (df_oh['Cost'].max() * 1.3) if not df_oh.empty else 10)
+        ax7.set_ylabel("")
         ax7.set_xlabel("")
         ax7.set_xticks([])
         ax7.set_xticklabels([])
         add_labels(ax7)
         st.pyplot(fig4)
+        plt.close()
 
     #-----------------------------------------------------------------------------------
 with tab3:

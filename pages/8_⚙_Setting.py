@@ -21,6 +21,17 @@ st.markdown("""
         font-weight: bold;
         margin-bottom: 5px;
     }
+              /* Add a soft glow when hovering over a result card */
+    div[data-testid="stVerticalBlock"] > div:has(div.stExpander), 
+    .st-emotion-cache-12w0slk { /* Targets container-bordered divs */
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    div[data-testid="element-container"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,51,160,0.1);
+
+            
     </style>
 """, unsafe_allow_html=True)
 
