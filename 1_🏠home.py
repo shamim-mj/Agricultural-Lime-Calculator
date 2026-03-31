@@ -4,12 +4,47 @@ import os
 
 # --- 1. PAGE CONFIGURATION ---
 
+
 st.set_page_config(
     page_title="AgLime Decision Support",
     page_icon="🚜",
     layout="centered",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded" # This ensures it starts OPEN
 )
+
+
+st.markdown("""
+    <style>
+    /* 1. Ensure the 'Open Sidebar' button is ALWAYS visible and colored */
+    [data-testid="collapsedControl"] {
+        visibility: visible !important;
+        display: flex !important;
+        background-color: #0033A0 !important; /* Matches your Kentucky Blue */
+        border-radius: 0 10px 10px 0 !important;
+        width: 40px !important;
+        height: 40px !important;
+        top: 60px !important; /* Moves it down so it's not at the very top edge */
+        left: 0 !important;
+        z-index: 999999 !important; /* Puts it on top of everything else */
+    }
+
+    /* 2. Make the arrow icon inside it white so you can see it */
+    [data-testid="collapsedControl"] svg {
+        fill: white !important;
+        width: 25px !important;
+        height: 25px !important;
+    }
+
+    /* 3. Safety: If you have 'header {visibility: hidden;}' anywhere, 
+       this line ensures the sidebar button is EXEMPT from that rule */
+    header[data-testid="stHeader"] {
+        visibility: visible !important;
+        background: transparent !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
 
 # --- 2. ADVANCED UI CSS ---
 st.markdown("""
@@ -114,7 +149,7 @@ with st.container(border=True):
     st.markdown('<span class="section-label">Disclaimer & Development</span>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="disclaimer-text">
-        All rights reserved. <span style="color:#d32f2f; font-weight:bold;">Disclaimer:</span> 
+        All rights reserved.<br>  <span style="color:#d32f2f; font-weight:bold;">Disclaimer:</span> 
         This open source web application was developed by 
         <a href='https://www.linkedin.com/in/mohammad-jan-shamim-693136112/'>Mohammad Shamim</a> 
         and <b>Robbie Williams</b> in Henderson, Kentucky, USA. 
