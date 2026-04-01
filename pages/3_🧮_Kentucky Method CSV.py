@@ -275,15 +275,19 @@ if uploadfile is not None:
 
         tab1, tab2, tab3 = st.tabs(["📊 **Lime Quality Analysis**", "💰 **Field Rates & Economics**", "🏆 **Best Source Recommendation**"])
 
-
         base_height = 1.5  # Minimum height for the "cute" look
         height_per_quarry = 0.5
         dynamic_height = base_height + (len(df) * height_per_quarry)
         width = 0.6
 
+
+
         # --- 1. Find ALL Most Economical (Lowest Cost) ---
-        min_cost = df['Cost'].min()
-        econ_winners = df[df['Cost'] == min_cost]
+
+        # --- 1. Find ALL Most Economical (Lowest Cost) ---
+        df['Cost_Per_Ton'] = df['Cost'] / df['Bulk_Rec']
+        min_cost = df['Cost_Per_Ton'].min()
+        econ_winners = df[df['Cost_Per_Ton'] == min_cost]
         econ_names = " & ".join(econ_winners['Quarry'].tolist())
 
         # --- 2. Find ALL Highest Quality (Highest RNV) ---
@@ -291,17 +295,25 @@ if uploadfile is not None:
         quality_winners = df[df['RNV'] == max_rnv]
         quality_names = " & ".join(quality_winners['Quarry'].tolist())
 
-        # --- 3. Find ALL Best Overall (The Scoring Logic) ---
+        # --- 3. THE WEIGHTED BEST OVERALL LOGIC ---
         cost_range = df['Cost'].max() - df['Cost'].min()
         rnv_range = df['RNV'].max() - df['RNV'].min()
+
+        # Normalization (handles cases where all costs or RNVs are the same)
         df['norm_cost'] = (df['Cost'] - df['Cost'].min()) / (cost_range + 1e-9)
         df['norm_rnv'] = (df['RNV'] - df['RNV'].min()) / (rnv_range + 1e-9)
-        df['Overall_Score'] = ((1 - df['norm_cost']) + df['norm_rnv']).round(3)
 
+        # WEIGHTED SCORE: 70% Cost, 30% Quality
+        # (1 - norm_cost) because lower cost is better
+        df['Overall_Score'] = (0.9 * (1 - df['norm_cost'])) + (0.1 * df['norm_rnv'])
+        df['Overall_Score'] = df['Overall_Score'].round(3)
+
+        # Find the Winner based on the new weighted score
         max_score = df['Overall_Score'].max()
         overall_winners = df[df['Overall_Score'] == max_score]
         overall_names = " & ".join(overall_winners['Quarry'].tolist())
-        best_overall = overall_winners.iloc[0] # Representative for stats
+        best_overall = overall_winners.iloc[0]
+
 
 
 
@@ -400,52 +412,67 @@ if uploadfile is not None:
             st.markdown("<h3 style='text-align: center; color: #0033A0;'>🏆 Lime Source Awards</h3>", unsafe_allow_html=True)
             st.write("")
 
-            col1, col2, col3 = st.columns(3)
-
-            # CARD 1: Most Economical
-            with col1:
-                with st.container(border=True):
-                    econ_title = "💸 MOST ECONOMICAL" if len(econ_winners) == 1 else "💸 ECONOMY TIE"
-                    st.markdown(f"##### {econ_title}")
-                    st.metric("Lowest Cost", f"${min_cost:.2f}/ac")
-                    st.success(f"**{econ_names}**")
-                    st.caption("Best for tight budgets.")
-
-            # CARD 2: Best Overall (The Balanced Pick)
-            with col2:
+            col_main, col_side = st.columns([1.5, 1.3])
+        
+            # CARD 2: Best Overall (The Gold "Hero" Card)
+            with col_main:
                 overall_title = "⭐ BEST OVERALL" if len(overall_winners) == 1 else "👯 OVERALL TIE"
+                # Increased min-height and added professional styling
                 st.markdown(f"""
-                    <div style="border: 2px solid #FFD700; border-radius: 10px; padding: 10px; background-color: #FFFDF0; text-align: center; min-height: 150px;">
-                        <h4 style="margin: 0; color: #B8860B;">{overall_title}</h4>
-                        <p style="font-size: 18px; font-weight: bold; margin: 10px 0;">{overall_names}</p>
-                        <p style="font-size: 13px; color: #555;">Best Balance of RNV & Cost</p>
+                    <div style="
+                        border: 2px solid #FFD700; 
+                        border-radius: 12px; 
+                        padding: 20px; 
+                        background-color: #FFFCF0; 
+                        text-align: center; 
+                        min-height: 300px;
+                        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    ">
+                        <h5 style="margin: 0; color: #B8860B; text-transform: uppercase; letter-spacing: 1px;">{overall_title}</h5>
+                        <hr style="border: 0.5px solid #FFD700; margin: 10px 0;">
+                        <p style="font-size: 22px; font-weight: 800; color: #31333F; margin: 10px 0;">{overall_names}</p>
+                        <div style="background-color: #FFD700; color: black; border-radius: 5px; padding: 2px 10px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 12px;">
+                            MAX VALUE SCORE - MOST ECONOMICAL
+                        </div>
                     </div>
                 """, unsafe_allow_html=True)
 
-            # CARD 3: Highest Quality
-            with col3:
-                with st.container(border=True):
-                    qual_title = "💎 HIGHEST QUALITY" if len(quality_winners) == 1 else "💎 QUALITY TIE"
-                    st.markdown(f"##### {qual_title}")
-                    st.metric("Top RNV", f"{max_rnv:.1f}%")
-                    st.info(f"**{quality_names}**")
-                    st.caption("Best for high-efficiency.")
+            # CARD 3: Highest Quality (Standard Container)
+            with col_side:
+                qual_title = "💎 HIGHEST QUALITY" if len(quality_winners) == 1 else "💎 QUALITY TIE"
+                st.markdown(f"""
+                <div style="
+                    border: 2px solid #ADD8E6; 
+                    border-radius: 12px; 
+                    padding: 20px; 
+                    background-color: #FFFFFF; 
+                    text-align: center; 
+                    min-height: 300px;
+                    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                ">
+                    <h5 style="margin: 0; color: #B8860B; text-transform: uppercase; letter-spacing: 1px;">{qual_title}</h5>
+                    <hr style="border: 0.5px solid #ADD8E6; margin: 10px 0;">
+                    <p style="font-size: 22px; font-weight: 800; color: #31333F; margin: 10px 0;">{quality_names}</p>
+                    <div style="background-color: #ADD8E6; color: black; border-radius: 5px; padding: 2px 10px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 12px;">
+                        MAX QUALITY
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
             st.write("---")
-        
-            # 1. Management Info (Keep it, but keep it tight)
-            with st.container(border=True):
-                st.markdown("#### 🚜 Management Recommendation")
-                display_name = "the Selected Winners" if len(overall_winners) > 1 else best_overall['Quarry']
-                st.info(f"Based on your soil test (pH {best_overall['wph']} → {best_overall['tph']}), **{display_name}** represents the best overall value. High-quality lime reacts faster and requires fewer total tons to be hauled and spread.")
-
             # 2. "Hide and See" Calculation Logic (The Expander)
             with st.expander("🔬 How were these winners calculated?"):
                 st.markdown("""
                 **The scoring system uses a Multi-Criteria Decision Analysis (MCDA):**
                 1. **Normalization:** Both **Total Cost** and **RNV** are scaled from 0 to 1 across all sources.
                 2. **Inversion:** Cost is inverted so that a lower cost equals a higher score.
-                3. **Weighting:** We apply a 50/50 weight to both Quality (RNV) and Economy (Cost).
+                3. **Weighting:** We apply a 10/90 weight to both Quality (RNV) and Economy (Cost).
                 4. **Scoring:** """)
                 st.latex(r"Score = (1 - \text{Normalized Cost}) + \text{Normalized RNV}")
                 st.write("Sources with the highest total score are awarded the **Best Overall** title. If scores are within 0.001 of each other, a tie is declared.")
@@ -454,7 +481,15 @@ if uploadfile is not None:
             st.markdown("##### Full Comparison Leaderboard")
             leaderboard_df = df[['Quarry', 'RNV', 'Bulk_Rec', 'Cost', 'Overall_Score']].copy()
             leaderboard_df.columns = ['Source', 'RNV (%)', 'Rate (t/ac)', 'Total Cost ($/ac)', 'Value Score']
-            st.dataframe(leaderboard_df.sort_values(by='Value Score', ascending=False), hide_index=True, use_container_width=True)        
+            st.dataframe(leaderboard_df.sort_values(by='Value Score', ascending=False), hide_index=True, use_container_width=True)     
+        
+            with st.container(border=True):
+                st.markdown("#### 🚜 Management Note")
+                st.info("""
+                    **Recommendation:** You may round your bulk lime application rates to the nearest 
+                    **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+                    spreading equipment.
+                """)
     except Exception as e:
         st.error(f"⚠️ **File Compatibility Error:** {e}")
         st.warning("Please ensure your CSV exactly matches the column order shown in the downloadable template.")

@@ -158,6 +158,43 @@ base_height = 1.5  # Minimum height for the "cute" look
 height_per_quarry = 0.5
 dynamic_height = base_height + (len(df_IL) * height_per_quarry)
 
+
+
+#----------------------------------------------------------------------------------------------------------
+# --- 1. Find ALL Most Economical (Lowest Cost) ---
+     # --- 1. Find ALL Most Economical (Lowest Cost) ---
+
+df_IL['Cost_Per_Ton'] = df_IL['Cost'] / df_IL['Bulk_Rec']
+min_cost = df_IL['Cost_Per_Ton'].min()
+econ_winners = df_IL[df_IL['Cost_Per_Ton'] == min_cost]
+econ_names = " & ".join(econ_winners['Quarry'].tolist())
+# --- 2. Find ALL Highest Quality (Highest RNV) ---
+max_rnv = df_IL['ENV'].max()
+quality_winners = df_IL[df_IL['ENV'] == max_rnv]
+quality_names = " & ".join(quality_winners['Quarry'].tolist())
+
+# --- 3. THE WEIGHTED BEST OVERALL LOGIC ---
+cost_range = df_IL['Cost'].max() - df_IL['Cost'].min()
+rnv_range = df_IL['ENV'].max() - df_IL['ENV'].min()
+
+# Normalization (handles cases where all costs or RNVs are the same)
+df_IL['norm_cost'] = (df_IL['Cost'] - df_IL['Cost'].min()) / (cost_range + 1e-9)
+df_IL['norm_rnv'] = (df_IL['ENV'] - df_IL['ENV'].min()) / (rnv_range + 1e-9)
+
+# WEIGHTED SCORE: 70% Cost, 30% Quality
+# (1 - norm_cost) because lower cost is better
+df_IL['Overall_Score'] = (0.9 * (1 - df_IL['norm_cost'])) + (0.1 * df_IL['norm_rnv'])
+df_IL['Overall_Score'] = df_IL['Overall_Score'].round(3)
+
+# Find the Winner based on the new weighted score
+max_score = df_IL['Overall_Score'].max()
+overall_winners = df_IL[df_IL['Overall_Score'] == max_score]
+overall_names = " & ".join(overall_winners['Quarry'].tolist())
+best_overall = overall_winners.iloc[0]
+
+#----------
+
+
 with tab1:
     # Sieve Stack (4 plots for Illinois)
     with st.container(border=True):
@@ -190,41 +227,87 @@ with tab1:
         st.pyplot(fig2)
         plt.close()
 
-with tab2:
-    st.markdown("<h4 style='text-align: center;'>Application Strategy</h4>", unsafe_allow_html=True)
-    with st.container(border=True):
-        st.markdown("### Adjusted Lime Recommendation (t/ac)")
-        fig3, ax6 = plt.subplots(figsize=(8, dynamic_height * 0.6))
-        sns.barplot(data=df_IL, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete, width=0.4)
-        
-        # FIXED: Ensure we use ax6 limits and labels
-        ax6.set_xlim(0, (df_IL['Bulk_Rec'].max() * 1.3) if not df_IL.empty else 10)
-        ax6.set_xlabel("")
-        ax6.set_ylabel("")
-        ax6.set_xticks([]) # FIXED: Was ax5 previously
-        add_labels(ax6)
-        st.pyplot(fig3)
-        plt.close()
+    with tab2:
+        st.markdown("<h3 style='text-align: center; color: #0033A0;'>🏆 Lime Source Awards</h3>", unsafe_allow_html=True)
+        st.write("")
 
-    with st.container(border=True):
-        st.markdown("### Total Application Cost ($/ac)")
-        fig4, ax7 = plt.subplots(figsize=(8, dynamic_height * 0.6))
-        sns.barplot(data=df_IL, x='Cost', y='Quarry', ax=ax7, palette=pallete, width=0.4)
-        
-        # FIXED: Ensure we use ax7 limits and labels
-        ax7.set_xlim(0, (df_IL['Cost'].max() * 1.3) if not df_IL.empty else 10)
-        ax7.set_xlabel("")
-        ax7.set_ylabel("")
-        ax7.set_xticks([]) # FIXED: Was ax5 previously
-        add_labels(ax7)
-        st.pyplot(fig4)
-        plt.close()
-    with st.container(border=True):
-        st.markdown("#### 🚜 Management Note")
-        st.info("""
-            **Recommendation:** You may round your bulk lime application rates to the nearest 
-            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
-            spreading equipment.
-        """)
+        col_main, col_side = st.columns([1.5, 1.3])
+    
+        # CARD 2: Best Overall (The Gold "Hero" Card)
+        with col_main:
+            overall_title = "⭐ BEST OVERALL" if len(overall_winners) == 1 else "👯 OVERALL TIE"
+            # Increased min-height and added professional styling
+            st.markdown(f"""
+                <div style="
+                    border: 2px solid #FFD700; 
+                    border-radius: 12px; 
+                    padding: 20px; 
+                    background-color: #FFFCF0; 
+                    text-align: center; 
+                    min-height: 300px;
+                    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                ">
+                    <h5 style="margin: 0; color: #B8860B; text-transform: uppercase; letter-spacing: 1px;">{overall_title}</h5>
+                    <hr style="border: 0.5px solid #FFD700; margin: 10px 0;">
+                    <p style="font-size: 22px; font-weight: 800; color: #31333F; margin: 10px 0;">{overall_names}</p>
+                    <div style="background-color: #FFD700; color: black; border-radius: 5px; padding: 2px 10px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 12px;">
+                        MAX VALUE SCORE - MOST ECONOMICAL
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        # CARD 3: Highest Quality (Standard Container)
+        with col_side:
+            qual_title = "💎 HIGHEST QUALITY" if len(quality_winners) == 1 else "💎 QUALITY TIE"
+            st.markdown(f"""
+            <div style="
+                border: 2px solid #ADD8E6; 
+                border-radius: 12px; 
+                padding: 20px; 
+                background-color: #FFFFFF; 
+                text-align: center; 
+                min-height: 300px;
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            ">
+                <h5 style="margin: 0; color: #B8860B; text-transform: uppercase; letter-spacing: 1px;">{qual_title}</h5>
+                <hr style="border: 0.5px solid #ADD8E6; margin: 10px 0;">
+                <p style="font-size: 22px; font-weight: 800; color: #31333F; margin: 10px 0;">{quality_names}</p>
+                <div style="background-color: #ADD8E6; color: black; border-radius: 5px; padding: 2px 10px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 12px;">
+                    MAX QUALITY
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.write("---")
+        # 2. "Hide and See" Calculation Logic (The Expander)
+        with st.expander("🔬 How were these winners calculated?"):
+            st.markdown("""
+            **The scoring system uses a Multi-Criteria Decision Analysis (MCDA):**
+            1. **Normalization:** Both **Total Cost** and **RNV** are scaled from 0 to 1 across all sources.
+            2. **Inversion:** Cost is inverted so that a lower cost equals a higher score.
+            3. **Weighting:** We apply a 10/90 weight to both Quality (RNV) and Economy (Cost).
+            4. **Scoring:** """)
+            st.latex(r"Score = (1 - \text{Normalized Cost}) + \text{Normalized RNV}")
+            st.write("Sources with the highest total score are awarded the **Best Overall** title. If scores are within 0.001 of each other, a tie is declared.")
+
+        # 3. Final Comparison Table
+        st.markdown("##### Full Comparison Leaderboard")
+        leaderboard_df = df_IL[['Quarry', 'ENV', 'Bulk_Rec', 'Cost', 'Overall_Score']].copy()
+        leaderboard_df.columns = ['Source', 'ENV (%)', 'Rate (t/ac)', 'Total Cost ($/ac)', 'Value Score']
+        st.dataframe(leaderboard_df.sort_values(by='Value Score', ascending=False), hide_index=True, use_container_width=True)     
+    
+        with st.container(border=True):
+            st.markdown("#### 🚜 Management Note")
+            st.info("""
+                **Recommendation:** You may round your bulk lime application rates to the nearest 
+                **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+                spreading equipment.
+            """)
 with tab3:
     st.info("Analysis based on the Illinois Voluntary Limestone Program. The 'Adjusted Recommendation' accounts for fineness efficiency and CCE to ensure target pH is met.")

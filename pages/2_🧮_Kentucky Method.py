@@ -113,6 +113,7 @@ st.markdown("""
         color: white !important;
         box-shadow: 0px 4px 10px rgba(0, 51, 160, 0.2);
     }
+    
 </style>
 
 """, unsafe_allow_html=True)
@@ -172,7 +173,9 @@ df["Zero%_eff"] = (df.gten / df.initial) * 100
 df['Fifty%_eff'] = ((df.lten - df.lfifty) / df.initial) * 100
 df['Hund%_eff'] = (df.lfifty / df.initial) * 100
 df["RNV"] = (df.cce / 100.0) * ((((df.lten - df.lfifty) / 2.0) + df.lfifty) / df.initial) * 100
-
+df['wph'] = wph
+df['bph'] = bph
+df['tph'] = tph
 ELR = -1.1 * (tph - wph) * (bph - 7.55) / ((bph - (1.1 * wph) + 1.47)) * (13.75 / 12)
 cffa = [(3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42][0]
 pure_lime = cffa * ELR
@@ -218,6 +221,46 @@ tab1, tab2, tab3 = st.tabs(["**Lime Quality**", "**Amount & Cost**", "**Summary 
 base_height = 1.5  # Minimum height for the "cute" look
 height_per_quarry = 0.5
 dynamic_height = base_height + (len(df) * height_per_quarry)
+
+
+#------------------------------------------------
+
+base_height = 1.5  # Minimum height for the "cute" look
+height_per_quarry = 0.5
+dynamic_height = base_height + (len(df) * height_per_quarry)
+width = 0.6
+
+# --- 1. Find ALL Most Economical (Lowest Cost) ---
+df['Cost_Per_Ton'] = df['Cost'] / df['Bulk_Rec']
+min_cost = df['Cost_Per_Ton'].min()
+econ_winners = df[df['Cost_Per_Ton'] == min_cost]
+econ_names = " & ".join(econ_winners['Quarry'].tolist())
+
+# --- 2. Find ALL Highest Quality (Highest RNV) ---
+max_rnv = df['RNV'].max()
+quality_winners = df[df['RNV'] == max_rnv]
+quality_names = " & ".join(quality_winners['Quarry'].tolist())
+
+# --- 3. THE WEIGHTED BEST OVERALL LOGIC ---
+cost_range = df['Cost'].max() - df['Cost'].min()
+rnv_range = df['RNV'].max() - df['RNV'].min()
+
+# Normalization (handles cases where all costs or RNVs are the same)
+df['norm_cost'] = (df['Cost'] - df['Cost'].min()) / (cost_range + 1e-9)
+df['norm_rnv'] = (df['RNV'] - df['RNV'].min()) / (rnv_range + 1e-9)
+
+# WEIGHTED SCORE: 70% Cost, 30% Quality
+# (1 - norm_cost) because lower cost is better
+df['Overall_Score'] = (0.9 * (1 - df['norm_cost'])) + (0.1 * df['norm_rnv'])
+df['Overall_Score'] = df['Overall_Score'].round(3)
+
+# Find the Winner based on the new weighted score
+max_score = df['Overall_Score'].max()
+overall_winners = df[df['Overall_Score'] == max_score]
+overall_names = " & ".join(overall_winners['Quarry'].tolist())
+best_overall = overall_winners.iloc[0]
+
+
 
 with tab1:
     with st.container(border=True):
@@ -288,58 +331,86 @@ with tab2:
         """)
 
     #-----------------------------------------------------------------------------------
-with tab3:
-    if not df.empty:
-        # 1. Calculation Logic: Sort by Cost (Low to High), then RNV (High to Low)
-        # This ensures that if costs are equal, the higher quality wins.
-        df_sorted = df.sort_values(by=['Cost', 'RNV'], ascending=[True, False])
-        
-        # The first row is now our "Best Pick"
-        best_value = df_sorted.iloc[0]
-        
-        # 2. The Header Container (Metrics)
-        with st.container(border=True):
-            st.markdown("### 🏆 Top Performance Summary")
-            m1, m2, m3 = st.columns(3)
-            
-            m1.metric("Top Value Source", best_value["Quarry"], 
-                    help="Lowest cost per acre. If costs match, highest RNV is chosen.")
-            m2.metric("Application Rate (t/ac)", f"{df['Bulk_Rec'].min():.1f} t/a", "Efficiency")
-            m3.metric("RNV Quality (%)", f"{df['RNV'].max():.1f}%", "RNV")
 
-        st.markdown("### 📊 Detailed Comparison")
-        
-        # 3. The Styled Table
-        # I corrected the key from "ENV" to "RNV" to match your dataframe slice
-        st.dataframe(
-            df[['Quarry', 'RNV', 'Bulk_Rec', 'Cost']],
-            column_config={
-                "Quarry": st.column_config.TextColumn("Lime Source", width="medium"),
-                "RNV": st.column_config.ProgressColumn(
-                    "Quality (RNV %)",
-                    help="Relative Neutralizing Value",
-                    format="%.1f%%",
-                    min_value=0,
-                    max_value=100,
-                ),
-                "Bulk_Rec": st.column_config.NumberColumn(
-                    "Rec. (t/a)",
-                    help="Adjusted Bulk Recommendation",
-                    format="%.2f 🚜",
-                ),
-                "Cost": st.column_config.NumberColumn(
-                    "Total Cost ($)",
-                    help="Total per acre (Lime + Delivery + Spreading)",
-                    format="$ %.2f",
-                ),
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-    with st.container(border=True):
-        st.markdown("#### 🚜 Management Note")
-        st.info("""
-            **Recommendation:** You may round your bulk lime application rates to the nearest 
-            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
-            spreading equipment.
-        """)
+    with tab3:
+        st.markdown("<h3 style='text-align: center; color: #0033A0;'>🏆 Lime Source Awards</h3>", unsafe_allow_html=True)
+        st.write("")
+
+        col_main, col_side = st.columns([1.5, 1.3])
+    
+        # CARD 2: Best Overall (The Gold "Hero" Card)
+        with col_main:
+            overall_title = "⭐ BEST OVERALL" if len(overall_winners) == 1 else "👯 OVERALL TIE"
+            # Increased min-height and added professional styling
+            st.markdown(f"""
+                <div style="
+                    border: 2px solid #FFD700; 
+                    border-radius: 12px; 
+                    padding: 20px; 
+                    background-color: #FFFCF0; 
+                    text-align: center; 
+                    min-height: 300px;
+                    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                ">
+                    <h5 style="margin: 0; color: #B8860B; text-transform: uppercase; letter-spacing: 1px;">{overall_title}</h5>
+                    <hr style="border: 0.5px solid #FFD700; margin: 10px 0;">
+                    <p style="font-size: 22px; font-weight: 800; color: #31333F; margin: 10px 0;">{overall_names}</p>
+                    <div style="background-color: #FFD700; color: black; border-radius: 5px; padding: 2px 10px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 12px;">
+                        MAX VALUE SCORE - MOST ECONOMICAL
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        # CARD 3: Highest Quality (Standard Container)
+        with col_side:
+            qual_title = "💎 HIGHEST QUALITY" if len(quality_winners) == 1 else "💎 QUALITY TIE"
+            st.markdown(f"""
+            <div style="
+                border: 2px solid #ADD8E6; 
+                border-radius: 12px; 
+                padding: 20px; 
+                background-color: #FFFFFF; 
+                text-align: center; 
+                min-height: 300px;
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            ">
+                <h5 style="margin: 0; color: #B8860B; text-transform: uppercase; letter-spacing: 1px;">{qual_title}</h5>
+                <hr style="border: 0.5px solid #ADD8E6; margin: 10px 0;">
+                <p style="font-size: 22px; font-weight: 800; color: #31333F; margin: 10px 0;">{quality_names}</p>
+                <div style="background-color: #ADD8E6; color: black; border-radius: 5px; padding: 2px 10px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 12px;">
+                    MAX QUALITY
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.write("---")
+        # 2. "Hide and See" Calculation Logic (The Expander)
+        with st.expander("🔬 How were these winners calculated?"):
+            st.markdown("""
+            **The scoring system uses a Multi-Criteria Decision Analysis (MCDA):**
+            1. **Normalization:** Both **Total Cost** and **RNV** are scaled from 0 to 1 across all sources.
+            2. **Inversion:** Cost is inverted so that a lower cost equals a higher score.
+            3. **Weighting:** We apply a 10/90 weight to both Quality (RNV) and Economy (Cost).
+            4. **Scoring:** """)
+            st.latex(r"Score = (1 - \text{Normalized Cost}) + \text{Normalized RNV}")
+            st.write("Sources with the highest total score are awarded the **Best Overall** title. If scores are within 0.001 of each other, a tie is declared.")
+
+        # 3. Final Comparison Table
+        st.markdown("##### Full Comparison Leaderboard")
+        leaderboard_df = df[['Quarry', 'RNV', 'Bulk_Rec', 'Cost', 'Overall_Score']].copy()
+        leaderboard_df.columns = ['Source', 'RNV (%)', 'Rate (t/ac)', 'Total Cost ($/ac)', 'Value Score']
+        st.dataframe(leaderboard_df.sort_values(by='Value Score', ascending=False), hide_index=True, use_container_width=True)     
+    
+        with st.container(border=True):
+            st.markdown("#### 🚜 Management Note")
+            st.info("""
+                **Recommendation:** You may round your bulk lime application rates to the nearest 
+                **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+                spreading equipment.
+            """)
