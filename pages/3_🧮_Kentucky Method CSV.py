@@ -38,60 +38,50 @@ st.markdown("""
 
 # Changes ----------------------------------------------------------------------------------------
 st.markdown("""
-    <style>
-    /* 1. COMPACT INPUTS: Prevents text from hiding in 5-column layouts */
-    .stNumberInput input, .stTextInput input {
-        background-color: #f8f9fa !important;
-        border-radius: 8px !important;
-        padding: 4px 8px !important; /* Reduced padding from 10px to keep text visible */
-        font-size: 14px !important;    /* Slightly smaller font for narrow columns */
-    }
-    
-    /* Remove extra vertical space around inputs */
-    div[data-testid="stMarkdownContainer"] p {
-        margin-bottom: 0px !important;
+<style>
+    /* 1. GLOBAL OVERFLOW FIX: Target every layer of the tab container */
+    [data-testid="stTabs"], 
+    [data-testid="stTabs"] > div, 
+    [data-testid="stTabs"] [data-baseweb="tab-list"],
+    [data-testid="stTabs"] [data-baseweb="tab"],
+    .stTabs [data-baseweb="tab-panel"] {
+        overflow: visible !important;
     }
 
-    /* 2. SNUG TABS: Moves tabs closer together */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 4px !important; /* Reduced from 24px to 4px to keep them close */
-        background-color: transparent;
-    }
-
+    /* 2. TAB BUTTON STYLING: Ensuring icons don't get clipped */
     .stTabs [data-baseweb="tab"] {
         height: 45px !important;
-        white-space: nowrap !important; /* Prevents text from stacking weirdly */
+        white-space: nowrap !important;
         background-color: #f0f2f6;
-        border-radius: 5px 5px 0px 0px !important; /* Rounded top corners only */
+        border-radius: 5px 5px 0px 0px !important;
         padding: 5px 15px !important;
         border: 1px solid #e9ecef;
+        /* Allow the help icon to pop out */
+        display: flex !important;
+        align-items: center !important;
     }
 
-    /* Active Tab Style */
+    /* 3. TOOLTIP Z-INDEX: Force tooltips to stay on top of everything */
+    div[data-testid="stTooltipHoverTarget"], 
+    .st-emotion-cache-1pxm6on, /* Common tooltip container cache */
+    [role="tooltip"] {
+        z-index: 999999 !important;
+        overflow: visible !important;
+    }
+
+    /* 4. HELP ICON POSITION: Aligning the '?' inside the tab */
+    .stTabs [data-testid="stHelpIcon"] {
+        margin-left: 6px !important;
+        flex-shrink: 0 !important; /* Prevents icon from squishing */
+    }
+
+    /* 5. ACTIVE TAB GLOW: Highlighting the selection */
     .stTabs [aria-selected="true"] {
         background-color: #0033A0 !important;
         color: white !important;
-        border-bottom: 2px solid #0033A0 !important;
+        box-shadow: 0px 4px 10px rgba(0, 51, 160, 0.2);
     }
-
-    /* 3. METRIC STYLING */
-    [data-testid="stMetricValue"] {
-        color: #0033A0;
-        font-size: 1.8rem !important;
-    }
-            
-    
-    /* Add a soft glow when hovering over a result card */
-    div[data-testid="stVerticalBlock"] > div:has(div.stExpander), 
-    .st-emotion-cache-12w0slk { /* Targets container-bordered divs */
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-    div[data-testid="element-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,51,160,0.1);
-    }
-    </style>
+</style>
 
 """, unsafe_allow_html=True)
 

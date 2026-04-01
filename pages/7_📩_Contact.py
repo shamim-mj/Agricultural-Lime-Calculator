@@ -1,30 +1,54 @@
 import streamlit as st
 
 # --- PAGE STYLING ---
-st.markdown(""" <style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-
-/* Custom styles for the single-column contact card */
-.contact-container {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 15px;
-    border: 1px solid #e6e9ef;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-              /* Add a soft glow when hovering over a result card */
-    div[data-testid="stVerticalBlock"] > div:has(div.stExpander), 
-    .st-emotion-cache-12w0slk { /* Targets container-bordered divs */
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+st.markdown(""" 
+<style>
+    /* 1. GLOBAL OVERFLOW FIX: Target every layer of the tab container */
+    [data-testid="stTabs"], 
+    [data-testid="stTabs"] > div, 
+    [data-testid="stTabs"] [data-baseweb="tab-list"],
+    [data-testid="stTabs"] [data-baseweb="tab"],
+    .stTabs [data-baseweb="tab-panel"] {
+        overflow: visible !important;
     }
 
-    div[data-testid="element-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,51,160,0.1);
+    /* 2. TAB BUTTON STYLING: Ensuring icons don't get clipped */
+    .stTabs [data-baseweb="tab"] {
+        height: 45px !important;
+        white-space: nowrap !important;
+        background-color: #f0f2f6;
+        border-radius: 5px 5px 0px 0px !important;
+        padding: 5px 15px !important;
+        border: 1px solid #e9ecef;
+        /* Allow the help icon to pop out */
+        display: flex !important;
+        align-items: center !important;
+    }
 
+    /* 3. TOOLTIP Z-INDEX: Force tooltips to stay on top of everything */
+    div[data-testid="stTooltipHoverTarget"], 
+    .st-emotion-cache-1pxm6on, /* Common tooltip container cache */
+    [role="tooltip"] {
+        z-index: 999999 !important;
+        overflow: visible !important;
+    }
+
+    /* 4. HELP ICON POSITION: Aligning the '?' inside the tab */
+    .stTabs [data-testid="stHelpIcon"] {
+        margin-left: 6px !important;
+        flex-shrink: 0 !important; /* Prevents icon from squishing */
+    }
+
+    /* 5. ACTIVE TAB GLOW: Highlighting the selection */
+    .stTabs [aria-selected="true"] {
+        background-color: #0033A0 !important;
+        color: white !important;
+        box-shadow: 0px 4px 10px rgba(0, 51, 160, 0.2);
+    }
+</style>
+            """
             
-</style> """, unsafe_allow_html=True)
+            , unsafe_allow_html=True)
 
 # --- CENTERED LAYOUT ---
 # Using columns to create a "narrow" centered column for a professional look

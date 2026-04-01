@@ -4,45 +4,50 @@ import datetime
 
 # --- PAGE CONFIG & STYLING ---
 st.markdown("""
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Center the radio buttons and make them look like a navigation bar */
-    div[data-testid="stHorizontalBlock"] {
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 10px;
+<style>
+    /* 1. GLOBAL OVERFLOW FIX: Target every layer of the tab container */
+    [data-testid="stTabs"], 
+    [data-testid="stTabs"] > div, 
+    [data-testid="stTabs"] [data-baseweb="tab-list"],
+    [data-testid="stTabs"] [data-baseweb="tab"],
+    .stTabs [data-baseweb="tab-panel"] {
+        overflow: visible !important;
     }
-    
-    /* Primary Download Button Styling */
-    div.stDownloadButton > button {
+
+    /* 2. TAB BUTTON STYLING: Ensuring icons don't get clipped */
+    .stTabs [data-baseweb="tab"] {
+        height: 45px !important;
+        white-space: nowrap !important;
+        background-color: #f0f2f6;
+        border-radius: 5px 5px 0px 0px !important;
+        padding: 5px 15px !important;
+        border: 1px solid #e9ecef;
+        /* Allow the help icon to pop out */
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* 3. TOOLTIP Z-INDEX: Force tooltips to stay on top of everything */
+    div[data-testid="stTooltipHoverTarget"], 
+    .st-emotion-cache-1pxm6on, /* Common tooltip container cache */
+    [role="tooltip"] {
+        z-index: 999999 !important;
+        overflow: visible !important;
+    }
+
+    /* 4. HELP ICON POSITION: Aligning the '?' inside the tab */
+    .stTabs [data-testid="stHelpIcon"] {
+        margin-left: 6px !important;
+        flex-shrink: 0 !important; /* Prevents icon from squishing */
+    }
+
+    /* 5. ACTIVE TAB GLOW: Highlighting the selection */
+    .stTabs [aria-selected="true"] {
         background-color: #0033A0 !important;
         color: white !important;
-        width: 100%;
-        border-radius: 8px;
-        height: 3.5em;
-        font-weight: bold;
-        border: none;
-        transition: 0.3s;
+        box-shadow: 0px 4px 10px rgba(0, 51, 160, 0.2);
     }
-    
-    div.stDownloadButton > button:hover {
-        background-color: #002680 !important;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-    }
-              /* Add a soft glow when hovering over a result card */
-    div[data-testid="stVerticalBlock"] > div:has(div.stExpander), 
-    .st-emotion-cache-12w0slk { /* Targets container-bordered divs */
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-    div[data-testid="element-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,51,160,0.1);
-
-            
-    </style>
+</style>
 """, unsafe_allow_html=True)
 
 # Header
