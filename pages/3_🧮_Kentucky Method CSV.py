@@ -248,22 +248,19 @@ if uploadfile is not None:
         df_display = df_display.rename(columns=column_mapping)
 
         # Display in AgGrid
-        # 1. Setup Grid Options
-        gb = GridOptionsBuilder.from_dataframe(df_display)
-        gb.configure_default_column(resizable=True, filterable=True, sortable=True)
+       # AgGrid(df_display.round(2), theme='alpine', columns_auto_size_mode=True)
+        st.subheader("📋 Calculated Recommendations")
 
-        # 2. Build the options
-        grid_options = gb.build()
-
-        # 3. Display with 'None' for Auto Size to force the scrollbar if it exceeds width
-        AgGrid(
+        # This creates a professional, scrollable, and sortable table
+        st.dataframe(
             df_display.round(2), 
-            gridOptions=grid_options,
-            theme='alpine', 
-            columns_auto_size_mode="FIT_ALL_COLUMNS_TO_VIEW", # Or try "NO_AUTOSIZE"
-            fit_columns_on_grid_load=False,
-            height=300,
-            width='100%'
+            use_container_width=False, # This forces the horizontal scrollbar if columns are wide
+            hide_index=True,
+            column_config={
+                "Source / Quarry": st.column_config.TextColumn(width="medium"),
+                "Total Cost ($/ac)": st.column_config.NumberColumn(format="$%.2f"),
+                "Bulk Lime (t/ac)": st.column_config.NumberColumn(format="%.1f")
+            }
         )
 
         # --- 4. Download Processed Data ---
