@@ -324,7 +324,31 @@ with tab3:
     st.markdown("##### Full Comparison Leaderboard")
     leaderboard_df = df_oh[['Quarry', '%_ENP', 'Bulk_Rec', 'Cost', 'Overall_Score']].copy()
     leaderboard_df.columns = ['Source', 'ENP (%)', 'Rate (t/ac)', 'Total Cost ($/ac)', 'Value Score']
-    st.dataframe(leaderboard_df.sort_values(by='Value Score', ascending=False), hide_index=True, use_container_width=True)     
+    sorted_df = leaderboard_df.sort_values(by='Value Score', ascending=False)
+        # 2. Use column_config to force decimal formatting
+    st.dataframe(
+        sorted_df,
+        column_config={
+            "ENP (%)": st.column_config.NumberColumn(
+                "Quality (RNV %)",
+                format="%.1f%%",  # Forces 1 decimal place (e.g., 81.0%)
+            ),
+            "Rate (t/ac)": st.column_config.NumberColumn(
+                "Rec. Rate",
+                format="%.2f 🚜", # Forces 2 decimal places
+            ),
+            "Total Cost ($/ac)": st.column_config.NumberColumn(
+                "Total Cost",
+                format="$ %.2f",  # Forces 2 decimal places (e.g., $ 22.00)
+            ),
+            "Value Score": st.column_config.NumberColumn(
+                "Value Score",
+                format="%.3f ⭐", # Forces 3 decimal places (e.g., 1.385 or 1.000)
+            ),
+        },
+        hide_index=True,
+        use_container_width=True
+    )   
 
     with st.container(border=True):
         st.markdown("#### 🚜 Management Note")
