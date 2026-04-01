@@ -127,8 +127,19 @@ st.markdown("""
 
 """, unsafe_allow_html=True)
 
-
-
+# not used
+def ag_round(x):
+    if x <= 0: return 0
+    
+    whole = math.floor(x)
+    decimal = x - whole
+    
+    if decimal <= 0.2:
+        return float(whole)
+    elif decimal <= 0.5:
+        return whole + 0.5
+    else:
+        return float(whole + 1)
 
 
 
@@ -176,7 +187,7 @@ ELR = -1.1 * (tph - wph) * (bph - 7.55) / ((bph - (1.1 * wph) + 1.47)) * (13.75 
 cffa = [(3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42][0]
 pure_lime = cffa * ELR
 df['Bulk_Rec'] = pure_lime / df.RNV * 100 if tph > wph else df.RNV * 0
-df['Bulk_Rec'] = df['Bulk_Rec'].apply(lambda x: math.ceil(x * 2) / 2)
+df['Bulk_Rec'] = df['Bulk_Rec'].round(1)
 df['Cost'] = df.Bulk_Rec * df.price
 st.session_state['df'] = df # this is used in downnloads
 
@@ -252,6 +263,7 @@ with tab1:
         st.pyplot(fig2)
         plt.close()
 
+
 with tab2:
     # --- Apply the same pattern to Recommendation and Cost plots ---
     with st.container(border=True):
@@ -275,6 +287,15 @@ with tab2:
         add_labels(ax6)
         st.pyplot(fig4)
         plt.close()
+
+
+    with st.container(border=True):
+        st.markdown("#### 🚜 Management Note")
+        st.info("""
+            **Recommendation:** You may round your bulk lime application rates to the nearest 
+            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+            spreading equipment.
+        """)
 
     #-----------------------------------------------------------------------------------
 with tab3:
@@ -325,3 +346,10 @@ with tab3:
             hide_index=True,
             use_container_width=True
         )
+    with st.container(border=True):
+        st.markdown("#### 🚜 Management Note")
+        st.info("""
+            **Recommendation:** You may round your bulk lime application rates to the nearest 
+            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+            spreading equipment.
+        """)

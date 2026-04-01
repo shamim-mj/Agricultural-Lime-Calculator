@@ -132,7 +132,7 @@ if percent_weight == "Manual Analysis":
         
         # Round UP to nearest 0.5
         raw_bulk = df_IL.OYAR * df_IL.recton
-        df_IL['Bulk_Rec'] = np.ceil(raw_bulk * 2) / 2
+        df_IL['Bulk_Rec'] = raw_bulk.round(1)
         df_IL['Cost'] = df_IL.Bulk_Rec * df_IL.price
 
         st.session_state['df_IL'] = df_IL
@@ -228,6 +228,12 @@ with tab2:
         add_labels(ax7)
         st.pyplot(fig4)
         plt.close()
-
+    with st.container(border=True):
+        st.markdown("#### 🚜 Management Note")
+        st.info("""
+            **Recommendation:** You may round your bulk lime application rates to the nearest 
+            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+            spreading equipment.
+        """)
 with tab3:
     st.info("Analysis based on the Illinois Voluntary Limestone Program. The 'Adjusted Recommendation' accounts for fineness efficiency and CCE to ensure target pH is met.")

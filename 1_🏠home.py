@@ -177,15 +177,39 @@ with st.container(border=True):
 # Acknowledgements
 st.markdown('<br><span class="section-label">Acknowledgement</span>', unsafe_allow_html=True)
 with st.container(border=True):
-    st.write("We are greatly indebted to **Dr. Frank Sikora** (Regulatory Services, University of Kentucky) for his invaluable technical input.")
+    st.write("We thank **Dr. Frank Sikora** (Regulatory Services, University of Kentucky) for his technical input.")
 
 # --- 6. RESOURCES & FOOTER ---
 st.markdown("---")
-res1, res2 = st.columns(2)
-with res1:
-    st.markdown("🔗 [Ag Lime Recommendations (ID-163)](http://www2.ca.uky.edu/agcomm/pubs/id/id163/id163.pdf)")
-with res2:
-    st.markdown("🔗 [UKY Rock Quarry Reports](https://www.rs.uky.edu/soil/technical_info/)")
+
+st.write("Please use the following resources for more information on lime and fertilizer recommendations")
+# Custom CSS to align links horizontally with spacing
+st.markdown("""
+    <style>
+    .link-container {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+        font-size: 0.9rem;
+    }
+    .link-item {
+        white-space: nowrap; /* This prevents the text from wrapping to a second line */
+    }
+    </style>
+    
+    <div class="link-container">
+        <div class="link-item">
+            🔗 <a href="https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/id163.pdf" target="_blank">Lime Quality (ID-163)</a>
+        </div>
+        <div class="link-item">
+            🔗 <a href="https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/AGR1_0.pdf" target="_blank">Nutrient Recs (AGR-1)</a>
+        </div>
+        <div class="link-item">
+            🔗 <a href="https://www.rs.uky.edu/soil/technical_info/" target="_blank">UKY Rock Quarry Reports</a>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.link_button("📥 Download Excel Version of the Calculator", 

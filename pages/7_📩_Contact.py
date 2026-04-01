@@ -32,7 +32,7 @@ _, center_col, _ = st.columns([1, 2, 1])
 
 with center_col:
     st.markdown("<h2 style='text-align: center; color: #0033A0;'>Get in Touch</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666;'>Have questions about the AgLime Calculator or soil fertility? Send me a message below.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666;'>Have questions about the AgLime Calculator? Send me a message below.</p>", unsafe_allow_html=True)
     
     with st.container(border=True):
         st.markdown("<h4 style='background-color: #0033A0; text-align: center; color: white; padding: 10px; border-radius: 5px;'>Mohammad Shamim</h4>", unsafe_allow_html=True)
@@ -40,8 +40,9 @@ with center_col:
         # Professional Info (Optional - feel free to edit)
         st.markdown("""
         <div style='text-align: center; margin-bottom: 20px;'>
-            <p style='margin: 0;'><b>Plant Physiologist / Agronomist / Agricultural Data Analyst / Researcher</b></p>
+            <p style='margin: 0;'><b>Crop Physiologist / Agronomist / Grain Corps Extension and Research Associate</b></p>
             <p style='font-size: 0.9em; color: #555;'>Specializing in echo-physiological responses of crop species, Data Analystics, & Decision Support Tools</p>
+            <p style='font-size: 0.9em; color: #555;'>University of Kentucky Soybean and Canola Agronomist</p>
         </div>
         """, unsafe_allow_html=True)
 

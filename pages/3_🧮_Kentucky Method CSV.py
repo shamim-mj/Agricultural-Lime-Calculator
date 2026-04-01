@@ -1,4 +1,3 @@
-# import  libraries
 import pandas as pd
 import streamlit as st
 import seaborn as sns
@@ -7,269 +6,453 @@ from streamlit_option_menu import option_menu
 from st_aggrid import AgGrid
 import time
 import math
+import io
+
+# --- Page Config ---
+st.set_page_config(page_title="UKY Soil Lime Calculator", layout="centered")
+
+st.markdown("""
+    <style>
+    /* Responsive Padding for Mobile */
+    @media (max-width: 640px) {
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 2rem;
+        }
+        h2 { font-size: 24px !important; }
+    }
+
+    /* Make the Number Input boxes easier to tap with thumbs */
+    div[data-baseweb="input"] {
+        min-height: 45px;
+    }
+
+    /* Style the sidebar to look cleaner on mobile */
+    section[data-testid="stSidebar"] {
+        background-color: #f0f2f6;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Changes ----------------------------------------------------------------------------------------
+st.markdown("""
+    <style>
+    /* 1. COMPACT INPUTS: Prevents text from hiding in 5-column layouts */
+    .stNumberInput input, .stTextInput input {
+        background-color: #f8f9fa !important;
+        border-radius: 8px !important;
+        padding: 4px 8px !important; /* Reduced padding from 10px to keep text visible */
+        font-size: 14px !important;    /* Slightly smaller font for narrow columns */
+    }
+    
+    /* Remove extra vertical space around inputs */
+    div[data-testid="stMarkdownContainer"] p {
+        margin-bottom: 0px !important;
+    }
+
+    /* 2. SNUG TABS: Moves tabs closer together */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px !important; /* Reduced from 24px to 4px to keep them close */
+        background-color: transparent;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 45px !important;
+        white-space: nowrap !important; /* Prevents text from stacking weirdly */
+        background-color: #f0f2f6;
+        border-radius: 5px 5px 0px 0px !important; /* Rounded top corners only */
+        padding: 5px 15px !important;
+        border: 1px solid #e9ecef;
+    }
+
+    /* Active Tab Style */
+    .stTabs [aria-selected="true"] {
+        background-color: #0033A0 !important;
+        color: white !important;
+        border-bottom: 2px solid #0033A0 !important;
+    }
+
+    /* 3. METRIC STYLING */
+    [data-testid="stMetricValue"] {
+        color: #0033A0;
+        font-size: 1.8rem !important;
+    }
+            
+    
+    /* Add a soft glow when hovering over a result card */
+    div[data-testid="stVerticalBlock"] > div:has(div.stExpander), 
+    .st-emotion-cache-12w0slk { /* Targets container-bordered divs */
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    div[data-testid="element-container"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,51,160,0.1);
+    }
+    </style>
+
+""", unsafe_allow_html=True)
+
+
+# Hide Streamlit Branding
 st.markdown(""" <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
+.stDownloadButton {text-align: center;}
 </style> """, unsafe_allow_html=True)
 
-#title
-st.markdown("<h2 style='background-color: #0033A0; font-size:35px; text-align: center; color: 	white;'>Upload a CSV File</h2>", unsafe_allow_html=True)
-# data input options
-percent_weight = option_menu(None, ["Lab Results (Weight)", "Lab Results (Percentage)"], 
-    icons=[], 
-    menu_icon="cast", default_index=0, orientation="horizontal",
-    styles={
-        "container": {"padding": "0!important", "background-color": "#ffe6e6"},
-        "icon": {"color": "orange", "font-size": "20px"}, 
-        "nav-link": {"font-size": "20px", "text-align": "left", "margin":"0px", "--hover-color": "#eee"},
-        "nav-link-selected": {"background-color": "#ff0000"},
-    }
-)
-
-
-# Use this when a calculation or upload starts
-with st.status("Analyzing Soil Data...", expanded=True) as status:
-    st.write("Applying Sikora-2 Buffer Method...")
-    time.sleep(0.5) # Simulating math
-    st.write("Calculating Relative Neutralizing Value (RNV)...")
-    status.update(label="Analysis Complete!", state="complete", expanded=False)
-
-
-# ask the user what kind of data s/he has
-if percent_weight=="Lab Results (Weight)":
-    st.write("**:blue[Your file should look like this. The number of rows depends on the number of your samples]**")
-    # A demo file used to show the users how their file should be
-    st.dataframe(pd.DataFrame({"Lime Source":"Sample1", "Initial (g)": 100, "> #10 (g)": 10, "< #10": 90,"< #50 (g)":60,
-    "cce": 97.8, 'wph':5.8, 'bph':6.5, 'tph':6.5, 'price': 20}, index =[1]))
-    subcontainer1= st.container()
-    # Lets give some instructions to users how to create file and how it should look like
-    subcontainer1.markdown("""
-    <div style="text-align: justify;">
-    <span style='color: #0033A0; font-weight: bold; '>Tips:</span>
-    Your file must be a CSV file and should have columns as shown above. If the number and order of the columns are incorrect, 
-    the calculator will throw an error. </br>Please keep in mind that soil water pH (wph), buffer pH (bph), and 
-    target pH (tph) must be the same for all samples. Here we assume various lime sources are calculated for the same soil.
-    </div>
-    """, unsafe_allow_html=True)
-    uploadfile = st.file_uploader("upload Your  file", label_visibility= 'collapsed')
-# Lets see if the data has problems or not. if it does have problems, then instruct the user to correct the data
-# else, proceed
-    try:
-                # Lets give a condition if the upload file exist or not. If it exists then make it read it. 
-        if uploadfile is not None:
-            st.success("**File uploaded successfully!**")
-            df = pd.read_csv(uploadfile)
-            df.columns= ["Quarry", "initial", "gten", "lten", "lfifty", 'cce','wph', 'bph', 'tph','price']
-            AgGrid(df.round(1),  columns_auto_size_mode=True, theme='alpine')
-            st.caption("**:red[Here are the first five rows of your data]**")
-
-
-            # adding  columns with new calculations
-            df["Zero%_eff"] = (df.gten/df.initial)*100
-            df['Fifty%_eff'] = ((((df.lten-df.lfifty)))/df.initial)*100
-            df['Hund%_eff'] = (df.lfifty/df.initial)*100
-            df["RNV"] = df.cce/100.00*((((df.lten-df.lfifty)/2.0)+df.lfifty)/df.initial)*100
-
-            SWPH = df.wph
-            BPH = df.bph
-            TPH = df.tph
-            SW  = 12
-            RNV = df.RNV
-            part1 = -1.1 *(TPH-SWPH)*(BPH-7.55)
-            part2  = (BPH -(1.1*SWPH)+1.47)
-            part3 = 13.75/SW
-            ELR = part1/part2*part3
-            cffa = ELR.map(lambda x: (3.62 - (0.734*x) if x <= 3 else x==1.42))
-            pure_lime = cffa*ELR
-            df['Bulk_Rec'] = pure_lime/df.RNV*100 if TPH[0]>SWPH[0] else df.RNV *0
-            df['Cost'] = df.Bulk_Rec * df.price
-            df_up = df.copy()
-            st.session_state['df_up'] = df_up
-    except:
-        st.markdown("""
-        <div style = 'text-align: justify; color:red; font-weight: bold; font-size: 20px;'>
-        Your  data has been successfully uploaded but has compatibility issues.
-        Take a look at the sample file above and confirm that:</br>
-        😞 1. You are not using percentage-based data.</br>
-        😞 2. The number of columns in the dataframe is exaclty 10.</br>
-        😞 3. The order of the columns is correct. </br>
-                                
-        </div>
-        """, unsafe_allow_html=True)
-
-        
-
-if percent_weight=="Lab Results (Percentage)":
-    st.write("**:blue[Your file should look like this. The number of rows depends on the number of your sample]**")
-    # A demo data frame
-    st.dataframe(pd.DataFrame({"Lime Source":"Sample1","> #10 (%)": 10, "< #10 (%)":90,
-    "< #50 (%)": 60, "cce": 97.8, 'wph':5.8, 'bph':6.5, 'tph':6.5,'price': 20}, index =[1]))
-    subcontainer1= st.container()
-    # instruction on how to create a file
-    subcontainer1.markdown("""
-    <div style="text-align: justify;">
-    <span style='color: #0033A0; font-weight: bold;'>Tips:</span>
-    Your file must be a CSV file and should have columns as shown above. If the number and order of the columns are incorrect, 
-    the calculator will through an error. </br>Please keep in mind that soil water pH (wph), buffer pH (bph), and 
-    target pH (tph) must be the same for all samples. Here we assume various lime sources are calculated for the same soil.
-    </div>
-    """, unsafe_allow_html=True)
-    uploadfile = st.file_uploader("")
-
-# Lets see if the data has problems or not. if it does have problems, then instruct the user to correct the data
-# else, proceed
-    try:
-        if uploadfile is not None: # upload a file if it exists. Skip if it doesn't
-            st.success("**File uploaded successfully!**")
-            df = pd.read_csv(uploadfile)
-            df.columns= ["Quarry", "gten", "lten", "lfifty", 'cce', "wph", "bph", 'tph','price']
-            AgGrid(df.round(1), columns_auto_size_mode='FIT_ALL_COLUMNS_TO_VIEW', theme='alpine')
-            # st.caption("**:red[Here are the first few rows of your data]**")
-
-        # adding  columns with new calculations
-            df["Zero%_eff"] = df.gten
-            df['Fifty%_eff'] = (df.lten-df.lfifty)
-            df['Hund%_eff'] = df.lfifty
-            df["RNV"] = df.cce/100.00*(((df.lten-df.lfifty)/2.0)+df.lfifty)
-            SWPH =df.wph
-            BPH = df.bph
-            TPH = df.tph
-            SW  = 12
-            RNV = df.RNV
-            part1 = -1.1 *(TPH-SWPH)*(BPH-7.55)
-            part2  = (BPH -(1.1*SWPH)+1.47)
-            part3 = 13.75/SW
-            ELR = part1/part2*part3 #Equation LR
-            cffa = ELR.map(lambda x: (3.62 - (0.734*x) if x <= 3 else x==1.42))
-            pure_lime = cffa*ELR
-            df['Bulk_Rec'] = pure_lime/df.RNV*100 if TPH[0]>SWPH[0] else df.RNV *0
-            df['Bulk_Rec'] = df['Bulk_Rec'].apply(lambda x: math.ceil(x * 2) / 2)
-            df['Cost'] = df.Bulk_Rec * df.price
-            df_up = df.copy()
-            st.session_state['df_up'] = df_up
-
-    except:
-        st.markdown("""
-        <div style = 'text-align: justify; color:red; font-weight: bold; font-size: 20px;'>
-        Your  data has been successfully uploaded but has compatibility issues.
-        Take a look at the sample file above and confirm that:</br>
-        😞 1. You are not using weight-based data.</br>
-        😞 2. The number of columns in the dataframe is exactly 9.</br>
-        😞 3. The order of the columns is correct. </br>
-                            
-    </div>
-    """, unsafe_allow_html=True)
-# Lets see if the data has problems or not. if it does have problems, then instruct the user to correct the data
-# else, proceed
-st.write("___")
-try:
-    #@st.cache_data
-    def graph_h():
-        if df.shape[0]>1:
-            eff_h = 5+(df.shape[0]-5)*0.46
-            others = 2+(df.shape[0]-2)*0.15
-            rotation = 0
-            data_labels = 'edge'
-            return eff_h, others, rotation, data_labels
-        else:
-            return 4,  1, 0, 'edge'
-    eff_h, others, rotation, data_labels= graph_h()
-
-
-    if "pallete" not in st.session_state:
-        pallete = "Dark2"
+# --- HELPER: Create Template Data ---
+def get_template(mode):
+    if mode == "Lab Results (Weight)":
+        df_temp = pd.DataFrame({
+            "Lime Source": ["Quarry_A", "Quarry_B"], 
+            "Initial (g)": [100.0, 100.0], 
+            "> #10 (g)": [10.0, 5.0], 
+            "< #10": [90.0, 95.0], 
+            "< #50 (g)": [60.0, 70.0], 
+            "cce": [95.0, 98.0], 
+            'wph': [5.8, 5.8], 
+            'bph': [6.5, 6.5], 
+            'tph': [6.5, 6.5], 
+            'price': [25.0, 30.0]
+        })
     else:
-        pallete = st.session_state['pallete']
-    tab1, tab2= st.tabs(["**Lime Quality**", "**Lime Amount and Cost**"])   
-    with tab1:
-        st.markdown("<h5 style='background-color: #0033A0; font-size:35px; text-align: center; color: 	white;'>Lime Quality</h5>", unsafe_allow_html=True)
-        st.write("___")
-        fig,(ax1, ax2, ax3) = plt.subplots(3, 1, figsize = (7, eff_h), sharex=True, gridspec_kw={'hspace':0.19})
-        Fplot = sns.barplot(x = "Zero%_eff", y = 'Quarry', data=df, ax=ax1, palette=pallete)
-        ax1.set_ylabel(None)
-        ax1.set_xlabel(None)
-        ax1.axes.xaxis.set_visible(False)
-        ax1.text(0.45, -0.13, s="#10 Seive", transform = ax1.transAxes)
-        ax1.text(0.95, 0.18+eff_h*0.012, "RNV (0%)", rotation =270, transform= ax1.transAxes, fontsize=8)
-        ax1.bar_label(Fplot.containers[0], fmt="%.2f", rotation =0)
-        ax1.set_title("Lime Fineness (%)", fontsize = 18)
+        df_temp = pd.DataFrame({
+            "Lime Source": ["Quarry_A", "Quarry_B"], 
+            "> #10 (%)": [10.0, 5.0], 
+            "< #10 (%)": [90.0, 95.0], 
+            "< #50 (%)": [60.0, 70.0], 
+            "cce": [95.0, 98.0], 
+            'wph': [5.8, 5.8], 
+            'bph': [6.5, 6.5], 
+            'tph': [6.5, 6.5], 
+            'price': [25.0, 30.0]
+        })
+    return df_temp.to_csv(index=False).encode('utf-8')
 
+# --- Header ---
+st.markdown("<h2 style='background-color: #0033A0; padding: 15px; border-radius: 10px; font-size:30px; text-align: center; color: white;'>Agricultural Lime Quality & Cost Calculator</h2>", unsafe_allow_html=True)
+st.write("")
+st.write("This method is useful when you have more than 5 samples and when you need to download the analysis")
+st.write("")
 
-        Splot =sns.barplot(x = "Fifty%_eff", y = 'Quarry', data=df, ax=ax2, palette=pallete)
-        ax2.set_ylabel(None)
-        ax2.set_xlabel(None)
-        ax2.axes.xaxis.set_visible(False)
-        ax2.text(0.45, -0.13, s="#50 Seive", transform = ax2.transAxes)
-        ax2.text(0.95, 0.18+eff_h*0.012, "RNV (50%)", rotation =270, transform= ax2.transAxes, fontsize=8)
-        ax2.bar_label(Splot.containers[0], fmt="%.2f", rotation = 0)
+# --- Step 1: Configuration ---
+with st.container(border=True):
+    st.markdown("### 🛠️ Step 1: Select Lab Data Format")
+    percent_weight = option_menu(
+        menu_title=None, 
+        options=["Lab Results (Weight)", "Lab Results (Percentage)"], 
+        icons=['calculator', 'percent'], 
+        default_index=0,
+        orientation="horizontal",
+        styles={"container": {"padding": "0!important", "background-color": "#f0f2f6"}}
+    )
+    
+    if percent_weight == "Lab Results (Weight)":
+        st.caption("📝 **Weight Mode:** Provide raw grams from the sieve analysis.")
+    else:
+        st.caption("📝 **Percentage Mode:** Provide the calculated percentages passing each sieve.")
 
+# --- Step 2: Template & Upload ---
+st.write("")
+st.markdown("### 🛠️ Step 2: Use template or upload your csv file")
+col_temp, col_up = st.columns([1.2, 1.6], gap="small")
 
-        Tplot = sns.barplot(x = "Hund%_eff", y = 'Quarry', data=df, ax=ax3, palette=pallete)
-        ax3.set_xlim((0, 100))
-        ax3.set_ylabel(None)
-        ax3.set_xlabel(None)
-        ax3.text(0.95, 0.08+eff_h*0.012, "RNV (100%)", rotation =270, transform= ax3.transAxes, fontsize=8)
-        ax3.bar_label(Tplot.containers[0],fmt="%.2f", rotation = 0)
-        ax3.set_xlabel("", fontsize = 14)
-        ax3.axes.xaxis.set_visible(False)
-        ax3.set_xticklabels([])
-
-        rect = plt.Rectangle(
-            # (lower-left corner), width, height
-            (0.1232, 0.11), 0.776, 0.77, fill=False, color="k", lw=1, 
-            zorder=1000, transform=fig.transFigure, figure=fig
+with col_temp:
+    with st.container(border=True):
+        st.markdown("##### 📄 Need a template?")
+        st.write("Ensure your file matches our system.")
+        st.download_button(
+            label="📥 Download CSV",
+            data=get_template(percent_weight),
+            file_name="lime_calc_template.csv",
+            mime="text/csv",
+            use_container_width=True
         )
-        fig.patches.extend([rect]);
+st.write("**Note**: Files with differnt header names or mispalced columns will result in an error. Please use the template to avoid file errors.You may upload as many samples as you want")
+with col_up:
+    with st.container(border=True):
+        st.markdown("##### 📤 Upload Data")
+        uploadfile = st.file_uploader(
+            "Select your CSV file", 
+            type=["csv"], 
+            label_visibility="collapsed"
+        )
 
-        # plot for RNV_______________
-
-        fig1, ax4= plt.subplots(figsize = (7,others))
-        ax4.set_xlabel('RNV (%)')
-        ax4.set_ylabel(None)
-        ax4.set_title("Relative Neutralizaing Value (RNV (%))", fontsize = 18)
-
-        FrPlot = sns.barplot(x='RNV', y = 'Quarry', data=df, ax=ax4, palette=pallete)
-        ax4.set_xlim((0, 100))
-        ax4.bar_label(FrPlot.containers[0], fmt="%.2f", rotation=0)
-        ax4.set_ylabel(None)
-        ax4.set_xlabel("", fontsize = 14)
-        ax4.axes.xaxis.set_visible(False)
-        ax4.set_xticklabels([])
-        st.pyplot(fig)
-        st.pyplot(fig1)
-
-
-    with tab2:
-        st.markdown("<h5 style='background-color: #0033A0; font-size:35px; text-align: center; color: 	white;'>Lime Recommendation and Application Cost</h5>", unsafe_allow_html=True)
-        st.markdown("___")    
-        # Here I also want to give an option 
-        st.markdown("<h3 style='text-align: center; color: blue;'>""</h3>", unsafe_allow_html=True)
-        fig2, ax5 = plt.subplots(figsize =(7,others) )
-        ax5.set_ylabel(None)
-        ax5.set_title(f"Adjusted lime amount required to raise soil pH of {round(SWPH[0], 1)} to a target pH of {round(TPH[0],1)}", fontsize = 14)
-
-        FiPlot = sns.barplot(x='Bulk_Rec', y = 'Quarry', data=df, ax=ax5, palette=pallete)
-        ax5.bar_label(FiPlot.containers[0], fmt="%.2f", rotation = rotation, label_type=data_labels)
-        ax5.set_ylabel(None)
-        ax5.set_xlim([0, max(df.Bulk_Rec)+max(df.Bulk_Rec)*0.1]) # This syntax max the x axis length dynamic. Without it the data lable makes a problem
-        ax5.set_xlabel("Lime amount (t/ac)", fontsize = 14)
-        ax5.axes.xaxis.set_visible(False)
-        ax5.set_xticklabels([])
+# --- Processing & Visualization ---
+if uploadfile is not None:
+    st.divider()
+    try:
+        with st.status("Calculating Recommendations...", expanded=False) as status:
+            df = pd.read_csv(uploadfile)
             
-            # Plot for Cost of  Lime
+            # 1. Standardization & RNV Logic
+            if percent_weight == "Lab Results (Weight)":
+                df.columns = ["Quarry", "initial", "gten", "lten", "lfifty", 'cce','wph', 'bph', 'tph','price']
+                df["Zero%_eff"] = (df.gten/df.initial)*100
+                df['Fifty%_eff'] = ((df.lten-df.lfifty)/df.initial)*100
+                df['Hund%_eff'] = (df.lfifty/df.initial)*100
+                df["RNV"] = df.cce/100.00*((((df.lten-df.lfifty)/2.0)+df.lfifty)/df.initial)*100
+            else:
+                df.columns = ["Quarry", "gten", "lten", "lfifty", 'cce', "wph", "bph", 'tph','price']
+                df["Zero%_eff"] = df.gten
+                df['Fifty%_eff'] = (df.lten-df.lfifty)
+                df['Hund%_eff'] = df.lfifty
+                df["RNV"] = df.cce/100.00*(((df.lten-df.lfifty)/2.0)+df.lfifty)
 
-        fig3, ax6 = plt.subplots(figsize =(7,others) )
-        ax6.set_ylabel(None)
-        ax6.set_title(f"Total applicaiotn costs to raise soil water pH of {round(SWPH[0], 1)} to a target pH of {round(TPH[0],1)}", fontsize = 14)
+            # 2. Sikora-2 Buffer Engine
+            SWPH, BPH, TPH = df.wph, df.bph, df.tph
+            part1 = -1.1 *(TPH-SWPH)*(BPH-7.55)
+            part2 = (BPH -(1.1*SWPH)+1.47)
+            # Factor 13.75 for Sikora-2 Calibration
+            ELR = (part1/part2) * (13.75/12)
+            cffa = ELR.map(lambda x: (3.62 - (0.734*x)) if x <= 3 else 1.42)
+            pure_lime = cffa * ELR
+            
+            df['Bulk_Rec'] = (pure_lime/df.RNV*100).round(1)
+            df.loc[df['tph'] <= df['wph'], 'Bulk_Rec'] = 0.0
+            df['Cost'] = (df.Bulk_Rec * df.price).round(2)
+            status.update(label="Calculations Finished!", state="complete")
 
-        SiPlot = sns.barplot(x='Cost', y = 'Quarry', data=df, ax=ax6, palette=pallete)
-        ax6.bar_label(SiPlot.containers[0], fmt="%.2f", rotation = rotation, label_type=data_labels)
-        ax6.set_ylabel(None)
-        ax6.set_xlabel("Total applicaiton costs ($/ac)")
-        ax6.set_xlim([0, max(df.Cost)+max(df.Cost)*0.1])
-        ax6.axes.xaxis.set_visible(False)
-        ax6.set_xticklabels([])
-        st.pyplot(fig2)
-        st.pyplot(fig3)
-except:
-    pass
+        # --- 1. Define the specific columns we want to show (and their order) ---
+        # This ignores the "raw" math columns like 'lten', 'lfifty', etc.
+        cols_to_show = [
+            "Quarry", "Zero%_eff","Fifty%_eff", "Hund%_eff", "wph", "bph", "tph", "cce", "RNV", 
+            "Bulk_Rec", "price", "Cost"
+        ]
+
+        # --- 2. Define the Professional Mapping ---
+        column_mapping = {
+            "Quarry"    : "Source / Quarry",
+            "Zero%_eff" : "Effective (0%)", 
+            "Fifty%_eff": "Effective (50%)",
+            "Hund%_eff" : "Effective (100%)",
+            "wph"       : "Soil pH",
+            "bph"       : "Buffer pH",
+            "tph"       : "Target pH",
+            "cce"       : "CCE (%)",
+            "RNV"       : "RNV (%)",
+            "Bulk_Rec"  : "Bulk Lime (t/ac)",
+            "price"     : "Unit Price ($/t)",
+            "Cost"      : "Total Cost ($/ac)"
+        }
+
+        # --- 3. Create the Display Version ---
+        st.subheader("📋 Calculated Recommendations")
+
+        # Select only the columns we want, then rename them
+        # This prevents "double columns" because we are being explicit
+        df_display = df[cols_to_show].copy()
+        df_display = df_display.rename(columns=column_mapping)
+
+        # Display in AgGrid
+        AgGrid(df_display.round(2), theme='alpine', columns_auto_size_mode=True)
+
+        # --- 4. Download Processed Data ---
+        with st.container():
+            st.write("")
+            processed_csv = df_display.to_csv(index=False).encode('utf-8')
+
+            st.download_button(
+                label="💾 Download Professional Report (CSV)",
+                data=processed_csv,
+                file_name="UKY_Lime_Recommendation.csv",
+                mime="text/csv",
+                help="Download the results with professional headers for your records.",
+                use_container_width=True
+            )
+            st.write("---")
+
+
+        # 4. Visualization Setup
+        num_rows = len(df)
+        eff_h = max(5, 4 + (num_rows - 2) * 0.5)
+        others_h = max(4, 2 + (num_rows - 1) * 0.6)
+        pallete = "viridis"
+
+        tab1, tab2, tab3 = st.tabs(["📊 **Lime Quality Analysis**", "💰 **Field Rates & Economics**", "🏆 **Best Source Recommendation**"])
+
+
+        base_height = 1.5  # Minimum height for the "cute" look
+        height_per_quarry = 0.5
+        dynamic_height = base_height + (len(df) * height_per_quarry)
+        width = 0.6
+
+        # --- 1. Find ALL Most Economical (Lowest Cost) ---
+        min_cost = df['Cost'].min()
+        econ_winners = df[df['Cost'] == min_cost]
+        econ_names = " & ".join(econ_winners['Quarry'].tolist())
+
+        # --- 2. Find ALL Highest Quality (Highest RNV) ---
+        max_rnv = df['RNV'].max()
+        quality_winners = df[df['RNV'] == max_rnv]
+        quality_names = " & ".join(quality_winners['Quarry'].tolist())
+
+        # --- 3. Find ALL Best Overall (The Scoring Logic) ---
+        cost_range = df['Cost'].max() - df['Cost'].min()
+        rnv_range = df['RNV'].max() - df['RNV'].min()
+        df['norm_cost'] = (df['Cost'] - df['Cost'].min()) / (cost_range + 1e-9)
+        df['norm_rnv'] = (df['RNV'] - df['RNV'].min()) / (rnv_range + 1e-9)
+        df['Overall_Score'] = ((1 - df['norm_cost']) + df['norm_rnv']).round(3)
+
+        max_score = df['Overall_Score'].max()
+        overall_winners = df[df['Overall_Score'] == max_score]
+        overall_names = " & ".join(overall_winners['Quarry'].tolist())
+        best_overall = overall_winners.iloc[0] # Representative for stats
+
+
+
+        with tab1:
+            with st.container(border=True):
+                st.markdown("#### Sieve Analysis")
+            
+                # FIG 1: Fineness Subplots
+                fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, dynamic_height * 1.2), sharex=True)
+                # Sieve > 10
+                sns.barplot(x="Zero%_eff", y='Quarry', data=df, ax=ax1, palette=pallete, width=width)
+                for c in ax1.containers: ax1.bar_label(c, fmt="%.1f%%", padding=3)
+                ax1.set_title("Fineness Fractions (%)", fontsize=12)
+                ax1.set_ylabel("")
+                ax1.set_xlabel("")
+                ax1.set_xticklabels([])
+                ax1.set_xticks([])
+                ax1.text(1.02, 0.5, "> #10 Sieve", transform=ax1.transAxes, rotation=270, va='center')
+
+                # Sieve 10-50
+                sns.barplot(x="Fifty%_eff", y='Quarry', data=df, ax=ax2, palette=pallete, width=width)
+                for c in ax2.containers: ax2.bar_label(c, fmt="%.1f%%", padding=3)
+                ax2.set_ylabel("")
+                ax2.set_xlabel("")
+                ax2.set_xticklabels([])
+                ax2.set_xticks([])
+                ax2.text(1.02, 0.5, "#10-#50 Sieve", transform=ax2.transAxes, rotation=270, va='center')
+
+                # Pass 50
+                sns.barplot(x="Hund%_eff", y='Quarry', data=df, ax=ax3, palette=pallete, width=width)
+                for c in ax3.containers: ax3.bar_label(c, fmt="%.1f%%", padding=3)
+                ax3.set_ylabel("")
+                ax3.set_xlabel("Percent of Total Weight")
+                ax3.text(1.02, 0.5, "Pass #50", transform=ax3.transAxes, rotation=270, va='center')
+                ax3.set_xlim(0, 120)
+                ax3.set_xticklabels([])
+                ax3.set_xticks([])
+                st.pyplot(fig)
+                plt.tight_layout(pad=0.5)
+
+            # FIG 2: RNV Plot
+            with st.container(border=True):
+                st.markdown("#### Relative Neutralizing Value (RNV, %)")
+                fig_rnv, ax_rnv = plt.subplots(figsize=(8, dynamic_height * 0.45), sharex=True)
+                sns.barplot(x='RNV', y='Quarry', data=df, ax=ax_rnv, palette=pallete, width=width)
+                for c in ax_rnv.containers: ax_rnv.bar_label(c, fmt="%.1f%%", padding=3)
+                #ax_rnv.set_title("Relative Neutralizing Value (RNV %)", fontsize=12)
+                ax_rnv.set_xlim(0, 120)
+                ax_rnv.set_ylabel("")
+                ax_rnv.set_xticklabels([])
+                ax_rnv.set_xticks([])
+                ax_rnv.set_xlabel("")
+                st.pyplot(fig_rnv)
+                plt.tight_layout(pad=0.5)
+
+        with tab2:
+            # st.markdown("<h4 style='text-align: center; color: #0033A0;'>Recommendation Breakdown</h4>", unsafe_allow_html=True)
+            
+            # Recommendation Bars
+            with st.container(border=True):
+                st.markdown("#### Adjusted Bulk Lime Rate (t/ac)")
+                fig_rec, ax_rec = plt.subplots(figsize=(8, dynamic_height * 0.45), sharex=True)
+                sns.barplot(x='Bulk_Rec', y='Quarry', data=df, ax=ax_rec, palette=pallete, width=width)
+                for c in ax_rec.containers: ax_rec.bar_label(c, padding=3)
+                # ax_rec.set_title("Adjusted Bulk Lime (Tons/Acre)", fontsize=12)
+                ax_rec.set_xlim(0, df.Bulk_Rec.max() * 1.3)
+                ax_rec.set_ylabel("")
+                ax_rec.set_xticklabels([])
+                ax_rec.set_xticks([])
+                ax_rec.set_xlabel("")
+                st.pyplot(fig_rec)
+
+            # Cost Bars
+            with st.container(border=True):
+                st.markdown("#### Total Application Cost ($/ac)")
+                fig_cost, ax_cost = plt.subplots(figsize=(8, dynamic_height * 0.45), sharex=True)
+                sns.barplot(x='Cost', y='Quarry', data=df, ax=ax_cost, palette=pallete, width=width)
+                for c in ax_cost.containers: ax_cost.bar_label(c, fmt="$%.2f", padding=3)
+                # ax_cost.set_title("Total Cost ($/Acre)", fontsize=12)
+                ax_cost.set_xlim(0, df.Cost.max() * 1.3)
+                ax_cost.set_ylabel("")
+                ax_cost.set_xticklabels([])
+                ax_cost.set_xticks([])
+                ax_cost.set_xlabel("")
+                st.pyplot(fig_cost)
+
+            # Management Note Section
+            with st.container(border=True):
+                st.markdown("#### 🚜 Management Note")
+                st.info(f"The amount of lime required to raise the soil pH of **{df.wph.iloc[0]}** to a target pH of **{df.tph.iloc[0]}**.")
+                st.info("""
+                        **Recommendation:** You may round your bulk lime application rates to the nearest 
+                        **half-ton (0.5)** or **whole ton** based on the calibration limits of your spreading equipment.""")
+
+        with tab3:
+            st.markdown("<h3 style='text-align: center; color: #0033A0;'>🏆 Lime Source Awards</h3>", unsafe_allow_html=True)
+            st.write("")
+
+            col1, col2, col3 = st.columns(3)
+
+            # CARD 1: Most Economical
+            with col1:
+                with st.container(border=True):
+                    econ_title = "💸 MOST ECONOMICAL" if len(econ_winners) == 1 else "💸 ECONOMY TIE"
+                    st.markdown(f"##### {econ_title}")
+                    st.metric("Lowest Cost", f"${min_cost:.2f}/ac")
+                    st.success(f"**{econ_names}**")
+                    st.caption("Best for tight budgets.")
+
+            # CARD 2: Best Overall (The Balanced Pick)
+            with col2:
+                overall_title = "⭐ BEST OVERALL" if len(overall_winners) == 1 else "👯 OVERALL TIE"
+                st.markdown(f"""
+                    <div style="border: 2px solid #FFD700; border-radius: 10px; padding: 10px; background-color: #FFFDF0; text-align: center; min-height: 150px;">
+                        <h4 style="margin: 0; color: #B8860B;">{overall_title}</h4>
+                        <p style="font-size: 18px; font-weight: bold; margin: 10px 0;">{overall_names}</p>
+                        <p style="font-size: 13px; color: #555;">Best Balance of RNV & Cost</p>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            # CARD 3: Highest Quality
+            with col3:
+                with st.container(border=True):
+                    qual_title = "💎 HIGHEST QUALITY" if len(quality_winners) == 1 else "💎 QUALITY TIE"
+                    st.markdown(f"##### {qual_title}")
+                    st.metric("Top RNV", f"{max_rnv:.1f}%")
+                    st.info(f"**{quality_names}**")
+                    st.caption("Best for high-efficiency.")
+
+            st.write("---")
+        
+            # 1. Management Info (Keep it, but keep it tight)
+            with st.container(border=True):
+                st.markdown("#### 🚜 Management Recommendation")
+                display_name = "the Selected Winners" if len(overall_winners) > 1 else best_overall['Quarry']
+                st.info(f"Based on your soil test (pH {best_overall['wph']} → {best_overall['tph']}), **{display_name}** represents the best overall value. High-quality lime reacts faster and requires fewer total tons to be hauled and spread.")
+
+            # 2. "Hide and See" Calculation Logic (The Expander)
+            with st.expander("🔬 How were these winners calculated?"):
+                st.markdown("""
+                **The scoring system uses a Multi-Criteria Decision Analysis (MCDA):**
+                1. **Normalization:** Both **Total Cost** and **RNV** are scaled from 0 to 1 across all sources.
+                2. **Inversion:** Cost is inverted so that a lower cost equals a higher score.
+                3. **Weighting:** We apply a 50/50 weight to both Quality (RNV) and Economy (Cost).
+                4. **Scoring:** """)
+                st.latex(r"Score = (1 - \text{Normalized Cost}) + \text{Normalized RNV}")
+                st.write("Sources with the highest total score are awarded the **Best Overall** title. If scores are within 0.001 of each other, a tie is declared.")
+
+            # 3. Final Comparison Table
+            st.markdown("##### Full Comparison Leaderboard")
+            leaderboard_df = df[['Quarry', 'RNV', 'Bulk_Rec', 'Cost', 'Overall_Score']].copy()
+            leaderboard_df.columns = ['Source', 'RNV (%)', 'Rate (t/ac)', 'Total Cost ($/ac)', 'Value Score']
+            st.dataframe(leaderboard_df.sort_values(by='Value Score', ascending=False), hide_index=True, use_container_width=True)        
+    except Exception as e:
+        st.error(f"⚠️ **File Compatibility Error:** {e}")
+        st.warning("Please ensure your CSV exactly matches the column order shown in the downloadable template.")

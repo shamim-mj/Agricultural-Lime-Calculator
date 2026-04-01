@@ -151,7 +151,7 @@ if not df_oh.empty:
     
     # Calculate and Round UP to nearest 0.5
     raw_bulk = (2000 / df_oh.t_ENP * df_oh.recton)
-    df_oh['Bulk_Rec'] =  math.ceil(raw_bulk * 2) / 2
+    df_oh['Bulk_Rec'] =  raw_bulk.round(1)
     df_oh['Cost'] = df_oh.Bulk_Rec * df_oh.price
 st.session_state['df_oh'] = df_oh # this is used in downnloads
 
@@ -258,7 +258,13 @@ with tab2:
         add_labels(ax7)
         st.pyplot(fig4)
         plt.close()
-
+    with st.container(border=True):
+        st.markdown("#### 🚜 Management Note")
+        st.info("""
+            **Recommendation:** You may round your bulk lime application rates to the nearest 
+            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+            spreading equipment.
+        """)
     #-----------------------------------------------------------------------------------
 with tab3:
     if not df_oh.empty:
@@ -308,3 +314,10 @@ with tab3:
             hide_index=True,
             use_container_width=True
         )
+    with st.container(border=True):
+        st.markdown("#### 🚜 Management Note")
+        st.info("""
+            **Recommendation:** You may round your bulk lime application rates to the nearest 
+            **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+            spreading equipment.
+        """)
