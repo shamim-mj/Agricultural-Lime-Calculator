@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 from st_aggrid import AgGrid
+from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
 import time
 import math
 import io
@@ -247,7 +248,23 @@ if uploadfile is not None:
         df_display = df_display.rename(columns=column_mapping)
 
         # Display in AgGrid
-        AgGrid(df_display.round(2), theme='alpine', columns_auto_size_mode=True)
+        # 1. Setup Grid Options
+        gb = GridOptionsBuilder.from_dataframe(df_display)
+        gb.configure_default_column(resizable=True, filterable=True, sortable=True)
+
+        # 2. Build the options
+        grid_options = gb.build()
+
+        # 3. Display with 'None' for Auto Size to force the scrollbar if it exceeds width
+        AgGrid(
+            df_display.round(2), 
+            gridOptions=grid_options,
+            theme='alpine', 
+            columns_auto_size_mode="FIT_ALL_COLUMNS_TO_VIEW", # Or try "NO_AUTOSIZE"
+            fit_columns_on_grid_load=False,
+            height=300,
+            width='100%'
+        )
 
         # --- 4. Download Processed Data ---
         with st.container():
