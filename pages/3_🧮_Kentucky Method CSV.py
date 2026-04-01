@@ -249,8 +249,6 @@ if uploadfile is not None:
 
         # Display in AgGrid
        # AgGrid(df_display.round(2), theme='alpine', columns_auto_size_mode=True)
-        st.subheader("📋 Calculated Recommendations")
-
         # This creates a professional, scrollable, and sortable table
         st.dataframe(
             df_display.round(2), 
