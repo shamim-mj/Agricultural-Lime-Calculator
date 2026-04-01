@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 from st_aggrid import AgGrid
 import time
+import math
 st.markdown(""" <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -142,6 +143,7 @@ if percent_weight=="Lab Results (Percentage)":
             cffa = ELR.map(lambda x: (3.62 - (0.734*x) if x <= 3 else x==1.42))
             pure_lime = cffa*ELR
             df['Bulk_Rec'] = pure_lime/df.RNV*100 if TPH[0]>SWPH[0] else df.RNV *0
+            df['Bulk_Rec'] = df['Bulk_Rec'].apply(lambda x: math.ceil(x * 2) / 2)
             df['Cost'] = df.Bulk_Rec * df.price
             df_up = df.copy()
             st.session_state['df_up'] = df_up

@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import math
 from streamlit_option_menu import option_menu
 
 # --- Page Config ---
@@ -150,7 +151,7 @@ if not df_oh.empty:
     
     # Calculate and Round UP to nearest 0.5
     raw_bulk = (2000 / df_oh.t_ENP * df_oh.recton)
-    df_oh['Bulk_Rec'] = np.ceil(raw_bulk * 2) / 2
+    df_oh['Bulk_Rec'] =  math.ceil(raw_bulk * 2) / 2
     df_oh['Cost'] = df_oh.Bulk_Rec * df_oh.price
 st.session_state['df_oh'] = df_oh # this is used in downnloads
 

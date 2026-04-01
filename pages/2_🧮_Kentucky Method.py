@@ -122,9 +122,9 @@ st.markdown("""
     div[data-testid="element-container"]:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 15px rgba(0,51,160,0.1);
-
+    }
     </style>
-}
+
 """, unsafe_allow_html=True)
 
 
@@ -172,11 +172,11 @@ df['Fifty%_eff'] = ((df.lten - df.lfifty) / df.initial) * 100
 df['Hund%_eff'] = (df.lfifty / df.initial) * 100
 df["RNV"] = (df.cce / 100.0) * ((((df.lten - df.lfifty) / 2.0) + df.lfifty) / df.initial) * 100
 
-ELR = ((-1.1 * (tph - wph) * (bph - 7.55)) / (bph - (1.1 * wph) + 1.47)) * (13.75 / 12)
-cffa = 3.62 - (0.734 * ELR) if ELR <= 3 else 1.42
+ELR = -1.1 * (tph - wph) * (bph - 7.55) / ((bph - (1.1 * wph) + 1.47)) * (13.75 / 12)
+cffa = [(3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42][0]
 pure_lime = cffa * ELR
-df['Bulk_Rec'] = (pure_lime / df.RNV * 100) if (tph > wph and not df.empty) else 0
-df['Bulk_Rec'] = df['Bulk_Rec'].apply(math.ceil)
+df['Bulk_Rec'] = pure_lime / df.RNV * 100 if tph > wph else df.RNV * 0
+df['Bulk_Rec'] = df['Bulk_Rec'].apply(lambda x: math.ceil(x * 2) / 2)
 df['Cost'] = df.Bulk_Rec * df.price
 st.session_state['df'] = df # this is used in downnloads
 
