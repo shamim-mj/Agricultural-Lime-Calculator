@@ -76,9 +76,13 @@ st.markdown("""
 st.markdown("<h2 class='main-header'>Ohio Method: Lime & Soil Data</h2>", unsafe_allow_html=True)
 
 # --- Selection Menu ---
-percent_weight = option_menu(None, ["Lab Results (Weight)", "Lab Results (Percentage)"], 
-    icons=[], menu_icon="cast", default_index=0, orientation="horizontal",
-    styles={"container": {"background-color": "#ffe6e6"}, "nav-link-selected": {"background-color": "#0033A0"}})
+percent_weight = option_menu(
+    menu_title=None,
+    options=["Lab Results (Weight)", "Lab Results (Percentage)"], 
+    icons=['calculator', 'percent'],
+    default_index=0,
+    orientation="horizontal",
+    styles={"container": {"padding": "0!important", "background-color": "#f0f2f6"}})
 
 # --- Lime Data Input ---
 st.markdown("<h4 class='main-header'>Lime Data Input</h4>", unsafe_allow_html=True)
