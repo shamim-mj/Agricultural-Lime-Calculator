@@ -79,7 +79,7 @@ st.markdown("<h2 class='main-header'>Illinois Method: Lime and Soil Data</h2>", 
 # --- Selection Menu ---
 percent_weight = option_menu(None, ["Manual Analysis"], 
     icons=[], menu_icon="cast", default_index=0, orientation="horizontal",
-    styles={"container": {"background-color": "#ffe6e6"}, "nav-link-selected": {"background-color": "#ff0000"}})
+    styles={"container": {"background-color": "#ffe6e6"}, "nav-link-selected": {"background-color":  "#0033A0"}})
 
 # --- Data Input Logic ---
 data_list = []
