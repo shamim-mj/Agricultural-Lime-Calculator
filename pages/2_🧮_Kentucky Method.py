@@ -275,7 +275,7 @@ with tab1:
         
         for col, ax, label in metrics:
             # Set 'width' to 0.4 or 0.5 to keep bars slim even if there is only 1 row
-            sns.barplot(data=df, x=col, y='Quarry', ax=ax, palette=pallete, width=0.4)
+            sns.barplot(data=df, x=col, y='Quarry', ax=ax, palette=pallete, width=0.4, hue='Quarry')
             ax.set_xlim(0, 120)
             ax.set_ylabel("")
             ax.set_xlabel("")
@@ -291,7 +291,7 @@ with tab1:
         st.markdown("### Relative Neutralizing Value (RNV, %)")
         # Apply the same dynamic height and width here
         fig2, ax4 = plt.subplots(figsize=(8, dynamic_height * 0.5))
-        sns.barplot(data=df, x='RNV', y='Quarry', ax=ax4, palette=pallete, width=0.4)
+        sns.barplot(data=df, x='RNV', y='Quarry', ax=ax4, palette=pallete, width=0.4, hue='Quarry')
         ax4.set_xlim(0, 120)
         ax4.set_ylabel("")
         ax4.set_xticks([])
@@ -306,7 +306,7 @@ with tab2:
     with st.container(border=True):
         st.markdown("### Lime Amount")
         fig3, ax5 = plt.subplots(figsize=(8, dynamic_height * 0.5))
-        sns.barplot(data=df, x='Bulk_Rec', y='Quarry', ax=ax5, palette=pallete, width=0.4)
+        sns.barplot(data=df, x='Bulk_Rec', y='Quarry', ax=ax5, palette=pallete, width=0.4, hue='Quarry')
         ax5.set_xlim(0, (df['Bulk_Rec'].max() * 1.3) if not df.empty else 10)
         ax5.set_ylabel("")
         ax5.set_xticks([])
@@ -317,7 +317,7 @@ with tab2:
     with st.container(border=True):
         st.markdown("### Total Cost ($/ac)")
         fig4, ax6 = plt.subplots(figsize=(8, dynamic_height * 0.5))
-        sns.barplot(data=df, x='Cost', y='Quarry', ax=ax6, palette=pallete, width=0.4)
+        sns.barplot(data=df, x='Cost', y='Quarry', ax=ax6, palette=pallete, width=0.4, hue='Quarry')
         ax6.set_xlim(0, (df['Cost'].max() * 1.3) if not df.empty else 10)
         ax6.set_ylabel("")
         ax6.set_xticks([])

@@ -324,7 +324,7 @@ if uploadfile is not None:
                 # FIG 1: Fineness Subplots
                 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, dynamic_height * 1.2), sharex=True)
                 # Sieve > 10
-                sns.barplot(x="Zero%_eff", y='Quarry', data=df, ax=ax1, palette=pallete, width=width)
+                sns.barplot(x="Zero%_eff", y='Quarry', data=df, ax=ax1, palette=pallete, width=width, hue='Quarry')
                 for c in ax1.containers: ax1.bar_label(c, fmt="%.1f%%", padding=3)
                 ax1.set_title("Fineness Fractions (%)", fontsize=12)
                 ax1.set_ylabel("")
@@ -334,7 +334,7 @@ if uploadfile is not None:
                 ax1.text(1.02, 0.5, "> #10 Sieve", transform=ax1.transAxes, rotation=270, va='center')
 
                 # Sieve 10-50
-                sns.barplot(x="Fifty%_eff", y='Quarry', data=df, ax=ax2, palette=pallete, width=width)
+                sns.barplot(x="Fifty%_eff", y='Quarry', data=df, ax=ax2, palette=pallete, width=width, hue='Quarry')
                 for c in ax2.containers: ax2.bar_label(c, fmt="%.1f%%", padding=3)
                 ax2.set_ylabel("")
                 ax2.set_xlabel("")
@@ -343,7 +343,7 @@ if uploadfile is not None:
                 ax2.text(1.02, 0.5, "#10-#50 Sieve", transform=ax2.transAxes, rotation=270, va='center')
 
                 # Pass 50
-                sns.barplot(x="Hund%_eff", y='Quarry', data=df, ax=ax3, palette=pallete, width=width)
+                sns.barplot(x="Hund%_eff", y='Quarry', data=df, ax=ax3, palette=pallete, width=width, hue='Quarry')
                 for c in ax3.containers: ax3.bar_label(c, fmt="%.1f%%", padding=3)
                 ax3.set_ylabel("")
                 ax3.set_xlabel("Percent of Total Weight")
@@ -358,7 +358,7 @@ if uploadfile is not None:
             with st.container(border=True):
                 st.markdown("#### Relative Neutralizing Value (RNV, %)")
                 fig_rnv, ax_rnv = plt.subplots(figsize=(8, dynamic_height * 0.45), sharex=True)
-                sns.barplot(x='RNV', y='Quarry', data=df, ax=ax_rnv, palette=pallete, width=width)
+                sns.barplot(x='RNV', y='Quarry', data=df, ax=ax_rnv, palette=pallete, width=width, hue='Quarry')
                 for c in ax_rnv.containers: ax_rnv.bar_label(c, fmt="%.1f%%", padding=3)
                 #ax_rnv.set_title("Relative Neutralizing Value (RNV %)", fontsize=12)
                 ax_rnv.set_xlim(0, 120)
@@ -376,7 +376,7 @@ if uploadfile is not None:
             with st.container(border=True):
                 st.markdown("#### Adjusted Bulk Lime Rate (t/ac)")
                 fig_rec, ax_rec = plt.subplots(figsize=(8, dynamic_height * 0.45), sharex=True)
-                sns.barplot(x='Bulk_Rec', y='Quarry', data=df, ax=ax_rec, palette=pallete, width=width)
+                sns.barplot(x='Bulk_Rec', y='Quarry', data=df, ax=ax_rec, palette=pallete, width=width, hue='Quarry')
                 for c in ax_rec.containers: ax_rec.bar_label(c, padding=3)
                 # ax_rec.set_title("Adjusted Bulk Lime (Tons/Acre)", fontsize=12)
                 ax_rec.set_xlim(0, df.Bulk_Rec.max() * 1.3)
@@ -390,7 +390,7 @@ if uploadfile is not None:
             with st.container(border=True):
                 st.markdown("#### Total Application Cost ($/ac)")
                 fig_cost, ax_cost = plt.subplots(figsize=(8, dynamic_height * 0.45), sharex=True)
-                sns.barplot(x='Cost', y='Quarry', data=df, ax=ax_cost, palette=pallete, width=width)
+                sns.barplot(x='Cost', y='Quarry', data=df, ax=ax_cost, palette=pallete, width=width, hue='Quarry')
                 for c in ax_cost.containers: ax_cost.bar_label(c, fmt="$%.2f", padding=3)
                 # ax_cost.set_title("Total Cost ($/Acre)", fontsize=12)
                 ax_cost.set_xlim(0, df.Cost.max() * 1.3)

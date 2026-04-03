@@ -208,7 +208,7 @@ with tab1:
                    ("L60B30", "#60 Sieve (50%)"), ("L60", "<#60 Sieve (100%)")]
         
         for i, (col, title) in enumerate(metrics):
-            sns.barplot(data=df_IL, x=col, y='Quarry', ax=axes[i], palette=pallete, width=0.4)
+            sns.barplot(data=df_IL, x=col, y='Quarry', ax=axes[i], palette=pallete, width=0.4, hue='Quarry')
             axes[i].set_xlim(0, 120)
             axes[i].set_ylabel("")
             axes[i].set_title(title, loc='center', fontsize=10)
@@ -221,7 +221,7 @@ with tab1:
     with st.container(border=True):
         st.markdown("### Effective Neutralizing Value (ENV, %)")
         fig2, ax5 = plt.subplots(figsize=(8, dynamic_height * 0.6))
-        sns.barplot(data=df_IL, x='ENV', y='Quarry', ax=ax5, palette=pallete, width=0.4)
+        sns.barplot(data=df_IL, x='ENV', y='Quarry', ax=ax5, palette=pallete, width=0.4, hue='Quarry')
         ax5.set_ylabel("")
         ax5.set_xlabel("")
         ax5.set_xlim(0, 120)
