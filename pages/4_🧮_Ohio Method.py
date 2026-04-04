@@ -225,7 +225,7 @@ with tab1:
                 ("fifty%_eff", "#60 Sieve"), ("Hund%_eff", "< #60 Sieve")]
         
         for i, (col, title) in enumerate(metrics):
-            sns.barplot(data=df_oh, x=col, y='Quarry', ax=axes[i], palette=pallete)
+            sns.barplot(data=df_oh, x=col, y='Quarry', ax=axes[i], palette=pallete, hue='Quarry')
             axes[i].set_xlim(0, 120)
             axes[i].set_ylabel("")
             axes[i].set_xticks([])
@@ -235,17 +235,14 @@ with tab1:
         plt.tight_layout(pad=0.2)
         st.pyplot(fig)
 
-
-with tab2:
-    # ... Particle Size code here (ensure width=0.4 is there too) ...
-
+ # ... Particle Size code here (ensure width=0.4 is there too) ...
     with st.container(border=True):
         st.markdown("### Effective Neutralizing Power (ENP, %)")
         # Lowered multiplier to 0.6 because single plots don't need as much vertical space as the triple stack
         fig2, ax5 = plt.subplots(figsize=(8, dynamic_height * 0.6))
         
         # ADDED width=0.4 HERE
-        sns.barplot(data=df_oh, x='%_ENP', y='Quarry', ax=ax5, palette=pallete, width=0.4)
+        sns.barplot(data=df_oh, x='%_ENP', y='Quarry', ax=ax5, palette=pallete, width=0.4, hue='Quarry')
         
         ax5.set_ylabel("")
         ax5.set_xlabel("")
@@ -255,6 +252,52 @@ with tab2:
         add_labels(ax5)
         st.pyplot(fig2)
         plt.close()
+
+with tab2:
+    # 1. Main Header for the Section
+    st.markdown("<h5 style='background-color: #0033A0; font-size:35px; text-align: center; color: white; padding: 10px; border-radius: 5px;'>Lime Recommendation and Application Cost</h5>", unsafe_allow_html=True)
+    st.markdown("---")
+
+    # 2. THE STYLED CONTAINER
+    with st.container(border=True):
+    
+
+            # --- Apply the same pattern to Recommendation and Cost plots ---
+        with st.container(border=True):
+            st.markdown("### Lime Amount")
+            fig3, ax6 = plt.subplots(figsize=(8, dynamic_height * 0.5))
+            sns.barplot(data=df_oh, x='Bulk_Rec', y='Quarry', ax=ax6, palette=pallete, width=0.4, hue='Quarry')
+            ax6.set_xlim(0, (df_oh['Bulk_Rec'].max() * 1.3) if not df_oh.empty else 10)
+            ax6.set_ylabel("")
+            ax6.set_xlabel("")
+            ax6.set_xticks([])
+            ax6.set_xticklabels([])
+            add_labels(ax6)
+            st.pyplot(fig3)
+            plt.close()
+
+        with st.container(border=True):
+            st.markdown("### Total Cost ($/ac)")
+            fig4, ax7 = plt.subplots(figsize=(8, dynamic_height * 0.5))
+            sns.barplot(data=df_oh, x='Cost', y='Quarry', ax=ax7, palette=pallete, width=0.4, hue='Quarry')
+            ax7.set_xlim(0, (df_oh['Cost'].max() * 1.3) if not df_oh.empty else 10)
+            ax7.set_ylabel("")
+            ax7.set_xlabel("")
+            ax7.set_xticks([])
+            ax7.set_xticklabels([])
+            add_labels(ax7)
+            st.pyplot(fig4)
+            plt.close()
+
+        with st.container(border=True):
+            st.markdown("#### 🚜 Management Note")
+            st.info("""
+                **Recommendation:** You may round your bulk lime application rates to the nearest 
+                **half-ton (0.5)** or **whole ton** based on the calibration limits of your 
+                spreading equipment.
+            """)
+
+
 with tab3:
     st.markdown("<h3 style='text-align: center; color: #0033A0;'>🏆 Lime Source Awards</h3>", unsafe_allow_html=True)
     st.write("")

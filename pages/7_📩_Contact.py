@@ -52,7 +52,7 @@ st.markdown("""
 
 # --- CENTERED LAYOUT ---
 # Using columns to create a "narrow" centered column for a professional look
-_, center_col, _ = st.columns([1, 2, 1])
+_, center_col, _ = st.columns([0.1, 2.8, 0.1])
 
 with center_col:
     st.markdown("<h2 style='text-align: center; color: #0033A0;'>Get in Touch</h2>", unsafe_allow_html=True)

@@ -23,7 +23,7 @@ st.markdown("""
         border-radius: 0 10px 10px 0 !important;
         width: 40px !important;
         height: 40px !important;
-        top: 60px !important; /* Moves it down so it's not at the very top edge */
+        top: 10px !important; /* Moves it down so it's not at the very top edge */
         left: 0 !important;
         z-index: 999999 !important; /* Puts it on top of everything else */
     }
@@ -61,7 +61,7 @@ st.markdown("""
     /* Hero Header Styling */
     .hero-box {
         background: linear-gradient(135deg, #0033A0 0%, #002270 100%);
-        padding: 45px 25px;
+        padding: 10px 10px;
         border-radius: 20px;
         color: white;
         text-align: center;
@@ -70,7 +70,7 @@ st.markdown("""
     }
     .hero-box h1 {
         font-size: 3.5rem !important;
-        font-weight: 900 !important;
+        font-weight: 600 !important;
         margin-bottom: 5px !important;
         color: white !important;
         letter-spacing: -1px;
@@ -138,10 +138,10 @@ path_lime = current_dir / "Lime particles .jpg"
 col1, col2 = st.columns(2)
 with col1:
     if path_sieve.exists():
-        st.image(str(path_sieve), caption="Sieve Analysis", use_column_width=True)
+        st.image(str(path_sieve), caption="Sieve Analysis", width='stretch')
 with col2:
     if path_lime.exists():
-        st.image(str(path_lime), caption="Particle Distribution", use_column_width=True)
+        st.image(str(path_lime), caption="Particle Distribution", width='stretch')
 st.caption("📷 Photo Credit: Robbie Williams")
 
 # --- 5. MAIN CONTENT & CREDITS ---
