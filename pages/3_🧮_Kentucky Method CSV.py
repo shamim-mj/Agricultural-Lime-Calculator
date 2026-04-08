@@ -197,7 +197,7 @@ if uploadfile is not None:
             part1 = -1.1 *(TPH-SWPH)*(BPH-7.55)
             part2 = (BPH -(1.1*SWPH)+1.47)
             # Factor 13.75 for Sikora-2 Calibration
-            ELR = (part1/part2) * (13.75/12)
+            ELR = (part1/part2) * (13.75/11.8)
             cffa = ELR.map(lambda x: (3.62 - (0.734*x)) if x <= 3 else 1.42)
             pure_lime = cffa * ELR
             

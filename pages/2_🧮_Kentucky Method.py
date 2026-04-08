@@ -180,7 +180,7 @@ df["RNV"] = (df.cce / 100.0) * ((((df.lten - df.lfifty) / 2.0) + df.lfifty) / df
 df['wph'] = wph
 df['bph'] = bph
 df['tph'] = tph
-ELR = -1.1 * (tph - wph) * (bph - 7.55) / ((bph - (1.1 * wph) + 1.47)) * (13.75 / 12)
+ELR = -1.1 * (tph - wph) * (bph - 7.55) / ((bph - (1.1 * wph) + 1.47)) * (13.75 / 11.8)
 cffa = [(3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42][0]
 pure_lime = cffa * ELR
 df['Bulk_Rec'] = pure_lime / df.RNV * 100 if tph > wph else df.RNV * 0
