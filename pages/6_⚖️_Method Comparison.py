@@ -165,28 +165,30 @@ with m3:
         BPH_s = st.slider("Buffer pH", 4.5, 9.0, 6.5, 0.05, key="bph_s")
         RNV = st.slider("RNV (%)", 20.0, 100.0, 67.5, 0.05, key="rnv_s")
         
-        # 1. Denominator Check (Prevention of Division by Zero or flipped logic)
+        # 1. Denominator Check
         denom = (BPH_s - (1.1 * SPH_s) + 1.47)
         
-        # 2. Logic Guard: Only calculate if Soil pH < Target pH and denominator is valid
+        # 2. Logic Guard: Only calculate if Target pH is actually higher than Soil pH
         if TPH > SPH_s and denom != 0:
-            # Calculate ELR
+            # Calculate ELR (Estimated Lime Requirement)
             raw_elr = -1.1 * (TPH - SPH_s) * (BPH_s - 7.55) / denom * (13.75 / 11.8)
-            ELR = max(0, raw_elr) # Force non-negative
+            ELR = max(0, raw_elr) 
             
             # Field correction factor adjustment
             cffa = (3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42
-            # Ensure cffa doesn't become negative from the formula above
             cffa = max(0, cffa)
             
             LR_lab = cffa * ELR
             LR_ad_s = (LR_lab / RNV * 100)
         else:
-            ELR = 0
-            LR_ad_s = 0
+            # CRITICAL: Define ALL variables here so the code doesn't crash later
+            ELR = 0.0
+            LR_lab = 0.0
+            LR_ad_s = 0.0
             
+        # Final safety check to prevent negative costs/rates
+        LR_ad_s = max(0.0, LR_ad_s)
         total_cost_s = LR_ad_s * lime_price
-
 
 
 st.info("**NOTE:** You can calculate %RNV from the Kentucky Method Tab.")
