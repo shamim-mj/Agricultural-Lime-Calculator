@@ -137,11 +137,23 @@ with m2:
         Depth = 0.90 if Depth_raw == 6 else 1.18
         
         def calculate_hsat(val):
+            # The formula is only valid for pH < 7.79
+            # If pH is higher, acidity (Hsat) is effectively 0
+            if val >= 7.79:
+                return 0.0001 # Small value to avoid division by zero
             return (5.55 - math.sqrt(max(0, (5.55**2) - 4 * 2.27 * (7.79 - val)))) / (2 * 2.27)
         
         Hsat1 = calculate_hsat(BPH_ae)
         Hsat2 = calculate_hsat(TPH)
-        LR_ae = ((8000 * (8.0 - BPH_ae)) / Hsat1 * (Hsat1 - Hsat2) * (1/ECCE) * Depth) / 2000
+        
+        # Guard against BPH > 8.0 or Target pH < Soil pH
+        if BPH_ae >= 8.0 or SPH_a >= TPH:
+            LR_ae = 0
+        else:
+            # We calculate the delta acidity and ensure it isn't negative
+            acidity_to_neutralize = max(0, Hsat1 - Hsat2)
+            LR_ae = ((8000 * (8.0 - BPH_ae)) / Hsat1 * acidity_to_neutralize * (1/ECCE) * Depth) / 2000
+
         LR_ad = (LR_ae / 0.67) * ECCE if LR_ae > 0 else 0
         total_cost = LR_ad * lime_price
 
@@ -153,13 +165,27 @@ with m3:
         BPH_s = st.slider("Buffer pH", 4.5, 9.0, 6.5, 0.05, key="bph_s")
         RNV = st.slider("RNV (%)", 20.0, 100.0, 67.5, 0.05, key="rnv_s")
         
-        # Using 11.8 for the 10cc scoop adjustment as per your code
-        ELR = -1.1 * (TPH - SPH_s) * (BPH_s - 7.55) / ((BPH_s - (1.1 * SPH_s) + 1.47)) * (13.75/11.8)
-        cffa = (3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42
-        LR_lab = cffa * ELR
-        LR_ad_s = (LR_lab / RNV * 100) if TPH > SPH_s else 0
+        # 1. Denominator Check (Prevention of Division by Zero or flipped logic)
+        denom = (BPH_s - (1.1 * SPH_s) + 1.47)
+        
+        # 2. Logic Guard: Only calculate if Soil pH < Target pH and denominator is valid
+        if TPH > SPH_s and denom != 0:
+            # Calculate ELR
+            raw_elr = -1.1 * (TPH - SPH_s) * (BPH_s - 7.55) / denom * (13.75 / 11.8)
+            ELR = max(0, raw_elr) # Force non-negative
+            
+            # Field correction factor adjustment
+            cffa = (3.62 - (0.734 * ELR)) if ELR <= 3 else 1.42
+            # Ensure cffa doesn't become negative from the formula above
+            cffa = max(0, cffa)
+            
+            LR_lab = cffa * ELR
+            LR_ad_s = (LR_lab / RNV * 100)
+        else:
+            ELR = 0
+            LR_ad_s = 0
+            
         total_cost_s = LR_ad_s * lime_price
-
 
 
 
