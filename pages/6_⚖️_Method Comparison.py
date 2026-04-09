@@ -110,20 +110,14 @@ with m1:
         SPH_m3 = st.slider("Soil pH", 4.5, 9.0, 5.8, 0.05, key="sph_m3")
         BPH_m3 = st.slider("Buffer pH", 4.5, 9.0, 6.85, 0.05, key="m3_bph")
         
-        # 1. Calculate AC, but cap it at 0 minimum
-        # If Buffer pH is > 6.6, AC should be 0
-        raw_ac = (6.6 - BPH_m3) / 0.25
+   
+        raw_ac = (6.6 - BPH_m3)*4 / 0.25
         AC = max(0, raw_ac)
-        
-        # 2. Calculate Base Lime Requirement
-        # Using max(0, ...) here prevents negative results if Soil pH > Target pH
-        if (6.6 - SPH_m3) != 0:
-            LR_m = AC * (max(0, TPH - SPH_m3) / (6.6 - SPH_m3))
-        else:
-            LR_m = 0
-            
-        # 3. Apply adjustments
-        LR_ad_me = (LR_m / 0.9) / ECCE if LR_m > 0 else 0
+        LR_m = AC * (max(0, TPH - SPH_m3) / (6.6 - SPH_m3))
+        LR_m = LR_m if LR_m > 0 else 0
+
+        # Apply adjustments
+        LR_ad_me = (LR_m / 0.9) / ECCE
         total_cost_m = LR_ad_me * lime_price
 
 # --- ADAM EVANS ---
@@ -141,21 +135,23 @@ with m2:
             # If pH is higher, acidity (Hsat) is effectively 0
             if val >= 7.79:
                 return 0.0001 # Small value to avoid division by zero
-            return (5.55 - math.sqrt(max(0, (5.55**2) - 4 * 2.27 * (7.79 - val)))) / (2 * 2.27)
+            return (5.55 - math.sqrt(5.55**2 - 4 * 2.27 * (7.79 - val))) / (2 * 2.27)
         
-        Hsat1 = calculate_hsat(BPH_ae)
+        Hsat1 = calculate_hsat(SPH_a)
         Hsat2 = calculate_hsat(TPH)
         
         # Guard against BPH > 8.0 or Target pH < Soil pH
         if BPH_ae >= 8.0 or SPH_a >= TPH:
             LR_ae = 0
+            total_cost = LR_ae/ECCE
         else:
             # We calculate the delta acidity and ensure it isn't negative
             acidity_to_neutralize = max(0, Hsat1 - Hsat2)
-            LR_ae = ((8000 * (8.0 - BPH_ae)) / Hsat1 * acidity_to_neutralize * (1/ECCE) * Depth) / 2000
+            # LR_ae = ((8000 * (8.0 - BPH_ae)) /Hsat1 * (Hsat1 - Hsat2) * (1/ECCE) * Depth)
+            LR_ae = ((8000 * (8.0 - BPH_ae)) / Hsat1 * (Hsat1 - Hsat2) * Depth) / 2000
+            LR_ad_a = LR_ae / ECCE
+            total_cost = LR_ad_a * lime_price
 
-        LR_ad = (LR_ae / 0.67) * ECCE if LR_ae > 0 else 0
-        total_cost = LR_ad * lime_price
 
 # --- SIKORA SMP ---
 with m3:
@@ -190,9 +186,6 @@ with m3:
         LR_ad_s = max(0.0, LR_ad_s)
         total_cost_s = LR_ad_s * lime_price
 
-
-st.info("**NOTE:** You can calculate %RNV from the Kentucky Method Tab.")
-st.info("Effective Calcium Carbonate Equivalent (ECCE) values could be retrieved from the seller")
 # --- Header ---
 st.markdown("---")
 st.markdown("""
@@ -231,7 +224,22 @@ with r1:
     st.markdown(create_card("Mehlich III", LR_m, LR_ad_me, total_cost_m), unsafe_allow_html=True)
 
 with r2:
-    st.markdown(create_card("Adam Evans", LR_ae, LR_ad, total_cost), unsafe_allow_html=True)
+    st.markdown(create_card("Adam Evans", LR_ae, LR_ad_a, total_cost), unsafe_allow_html=True)
 
 with r3:
     st.markdown(create_card("Sikora SMP", LR_lab, LR_ad_s, total_cost_s), unsafe_allow_html=True)
+# st.info("Due to the complicated procedure in Mehlich III and Adam Evans, the amount of Lime Return may not be accurate")
+
+# --- Status & Documentation Section ---
+st.markdown("---")
+
+st.markdown("""
+    <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #FFD700;">
+        <small style="color: #555;">
+            <strong>Pro Tips:</strong><br>
+            • 🔢 For SMP method, you can calculate <b>%RNV</b> in the Kentucky Method Tab.<br>
+            • ⚖️ <b>ECCE</b> (Effective Calcium Carbonate Equivalent) may be provided by your lime seller or lab.<br>
+            • 🧪 SMP lime recommendation uses <b>Sikora 2 Buffer</b> method.
+        </small>
+    </div>
+""", unsafe_allow_html=True)
